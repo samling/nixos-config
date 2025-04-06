@@ -112,10 +112,18 @@
       neovim
       ripgrep
       tmux
+      vscode
       waybar
       wezterm
       zellij
       zoxide
+      (code-cursor.overrideAttrs (oldAttrs: {
+        postFixup = ''
+          ${oldAttrs.postFixup or ""}
+          substituteInPlace $out/share/applications/cursor.desktop \
+            --replace 'Exec=${placeholder "out"}/share/cursor/cursor' 'Exec=${placeholder "out"}/bin/cursor'
+          '';
+      }))
     ];
   };
 

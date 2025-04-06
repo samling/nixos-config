@@ -27,7 +27,7 @@
     pkgs.obsidian
     pkgs.signal-desktop
     pkgs.vesktop
-    pkgs.vscode
+    #pkgs.vscode
 
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
@@ -38,13 +38,13 @@
     #=== code-cursor
     # currently the .desktop file launches the unwrapped binary at /share/cursor/cursor rather than the nixos-wrapped binary at bin/cursor
     #https://github.com/NixOS/nixpkgs/issues/395542
-    (pkgs.code-cursor.overrideAttrs (oldAttrs: {
-      postFixup = ''
-        ${oldAttrs.postFixup or ""}
-        substituteInPlace $out/share/applications/cursor.desktop \
-          --replace 'Exec=${placeholder "out"}/share/cursor/cursor' 'Exec=${placeholder "out"}/bin/cursor'
-        '';
-    }))
+    #(pkgs.code-cursor.overrideAttrs (oldAttrs: {
+    #  postFixup = ''
+    #    ${oldAttrs.postFixup or ""}
+    #    substituteInPlace $out/share/applications/cursor.desktop \
+    #      --replace 'Exec=${placeholder "out"}/share/cursor/cursor' 'Exec=${placeholder "out"}/bin/cursor'
+    #    '';
+    #}))
 
     # # You can also create simple shell scripts directly inside your
     # # configuration. For example, this adds a command 'my-hello' to your
