@@ -71,6 +71,9 @@
     variant = "";
   };
 
+  # Enable upower
+  services.upower.enable = true;
+
   # Configure keyd
   services.keyd = {
     enable = true;
