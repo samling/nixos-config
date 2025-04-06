@@ -2,7 +2,7 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, catppuccin, ... }:
 
 {
   imports =
@@ -20,6 +20,10 @@
       experimental-features = ["nix-command" "flakes"];
     };
   };
+
+  # Enable catppuccin
+  catppuccin.flavor = "mocha";
+  catppuccin.enable = true;
 
   # XDG portals
   xdg = {
@@ -136,6 +140,11 @@
     cmakeCurses
     gcc
     git
+    glib
+    glibc
+    gsettings-desktop-schemas
+    gtk3
+    gtk4
     keyd
     lshw
     pkgs.kitty

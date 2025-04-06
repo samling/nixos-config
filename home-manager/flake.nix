@@ -4,6 +4,7 @@
   inputs = {
     # Specify the source of Home Manager and Nixpkgs.
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    catppuccin.url = "github:catppuccin/nix";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,7 +16,7 @@
     };
   };
 
-  outputs = inputs@{ nixpkgs, home-manager, hyprland, hy3, ... }:
+  outputs = inputs@{ nixpkgs, catppuccin, home-manager, hyprland, hy3, ... }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
@@ -35,6 +36,7 @@
             };
           }
           ./home.nix
+          catppuccin.homeModules.catppuccin
         ];
 
         # Optionally use extraSpecialArgs
