@@ -73,6 +73,7 @@
               desktop
               hyprland
               asus
+              keyd
             ];
           };
 
