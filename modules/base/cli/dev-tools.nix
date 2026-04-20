@@ -4,6 +4,7 @@
       go
       gcc
       gnumake
+      npx
       python3
     ];
   };
