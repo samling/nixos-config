@@ -36,5 +36,8 @@
     home.file.".config/bat/config".text = ''
       --theme="Catppuccin Mocha"
     '';
+
+    home.file.".ripgreprc".source = ../../../config/ripgreprc;
+    home.sessionVariables.RIPGREP_CONFIG_PATH = "$HOME/.ripgreprc";
   };
 }

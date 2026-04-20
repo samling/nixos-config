@@ -9,6 +9,7 @@
     ];
 
     home.file.".gitmux.conf".source = ../../../config/gitmux.conf;
+    home.file.".gitconfig".source = ../../../config/gitconfig;
 
     home.file.".config/delta/themes/catppuccin" = {
       source = builtins.fetchGit {
