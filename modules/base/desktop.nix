@@ -116,7 +116,11 @@
       nerd-fonts.iosevka
     ];
 
-    services.udiskie.enable = true;
+    services.udiskie = {
+      enable = true;
+      automount = false;
+      tray = "auto";
+    };
 
     home.pointerCursor = {
       name = "BreezeX-RosePine-Linux";
