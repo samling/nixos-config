@@ -10,11 +10,8 @@
       tmux
       kubernetes
       media
-      direnv
       lsd
       command-snippets
-      tailscale
-      teleport
     ];
   };
 }

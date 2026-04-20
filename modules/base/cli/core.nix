@@ -14,6 +14,8 @@
       btop
       htop
       zoxide
+      direnv
+      tailscale
       inotify-tools
       fd
       just
@@ -43,6 +45,11 @@
 
     home.file.".ripgreprc".source = ../../../config/ripgreprc;
     home.sessionVariables.RIPGREP_CONFIG_PATH = "$HOME/.ripgreprc";
+
+    # Opt out of Teleport client auto-updates. CAU downloads a generic-Linux
+    # tsh into ~/.tsh/bin that can't run on NixOS (no dynamic loader);
+    # keep the autoPatchelf'd teleport-bin from PATH instead.
+    home.sessionVariables.TELEPORT_TOOLS_VERSION = "off";
 
     home.file.".config/btop/themes".source = builtins.fetchTarball {
       url = "https://github.com/catppuccin/btop/releases/download/1.0.0/themes.tar.gz";
