@@ -31,6 +31,10 @@
       claude-code
       toofan
       littlesnitch
+
+      # Used by chezmoi apply scoped to ~/.claude and ~/.ssh
+      chezmoi
+      doppler
     ];
 
     home.file.".config/bat/config".text = ''

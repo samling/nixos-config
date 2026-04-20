@@ -1,16 +1,13 @@
-# Global ignores
-install.sh
-Makefile*
-README*
-bootstrap.sh
-
-# Ignore non-config directories
-windows
-macos
+# Legacy non-chezmoi dirs
 linux
-tmux
+macos
+windows
 
-# Ignore directories
-dot_tmux/plugins/**
-.tmux/plugins/**
-
+# Nix infrastructure sits next to the chezmoi source
+flake.*
+modules
+pkgs
+config
+Justfile
+*.md
+hyprland.png
