@@ -113,51 +113,60 @@ flowchart TB
 
 ## Bootstrap (new machine)
 
-1. Install NixOS (minimal or graphical ISO)
-2. Connect to wifi: `nmtui`
-3. Enable flakes in `/etc/nixos/configuration.nix`:
+The minimal path from a fresh NixOS install to this flake owning the system.
+You do **not** need to change the hostname in `/etc/nixos/configuration.nix` —
+`nh ... -H <hostname>` selects which `nixosConfigurations.<name>` entry to
+build, and that entry's `networking.hostName` sets the running hostname on
+activation.
+
+1. Install NixOS (minimal or graphical ISO) and log in.
+2. Get networking: `nmtui` for wireless, nothing to do for wired.
+3. Enable flakes — the only edit you'll make to `/etc/nixos/`:
    ```nix
+   # /etc/nixos/configuration.nix
    nix.settings.experimental-features = [ "nix-command" "flakes" ];
    ```
-4. Set hostname in `/etc/nixos/configuration.nix`:
-    ```nix
-    networking.hostName = "<hostname>";
-    ```
-5. Rebuild: `sudo nixos-rebuild switch`
-6. Get git temporarily: `nix-shell -p git`
-7. Clone this repo:
+   Then `sudo nixos-rebuild switch` once so the system nix understands flakes.
+4. Clone the repo:
    ```bash
+   nix-shell -p git
    git clone <repo-url> ~/dotfiles && cd ~/dotfiles
    ```
-8. Dump hardware config directly from running hardware (never copy the installer's file or a stale checked-in one — UUIDs and kernel modules drift):
+5. Dump hardware config directly from running hardware (never copy the installer's file or a stale checked-in one — UUIDs and kernel modules drift):
    ```bash
    mkdir -p modules/hosts/<hostname>
    sudo nixos-generate-config --show-hardware-config > modules/hosts/<hostname>/hardware-configuration.nix
-   $EDITOR modules/hosts/<hostname>/default.nix   # see "Adding a host" for template
    ```
-9. If reinstalling over an old install, wipe leftover partitions so systemd GPT auto-discovery doesn't try to mount them and trigger a UUID wait-job:
+6. Write `modules/hosts/<hostname>/default.nix` and register the host in
+   `flake.nix` (see [Adding a host](#adding-a-host) for templates).
+7. If reinstalling over an old install, wipe leftover partitions so systemd GPT auto-discovery doesn't try to mount them and trigger a UUID wait-job:
    ```bash
    lsblk -f                         # find orphans not in fileSystems
    sudo wipefs -a /dev/<partition>  # for each orphan (old swap, old /home, etc.)
    ```
-10. Register the host in `flake.nix` (see "Adding a host" for syntax).
-11. Stage all files — flakes only see git-tracked files, unstaged edits are invisible:
+8. Stage all files — flakes only see git-tracked files, unstaged edits are invisible:
+   ```bash
+   git add -A
+   ```
+9. Sanity check the flake sees the hardware config:
+   ```bash
+   nix eval --json .#nixosConfigurations.<hostname>.config.fileSystems
+   ```
+10. Build as `boot` (not `switch`) and reboot — if the new generation breaks,
+    the previous one is still the default entry and you can roll back from the
+    systemd-boot menu. `nh` isn't on `PATH` yet, so invoke it one-off via `nix run`:
     ```bash
-    git add -A
-    ```
-12. Sanity check the flake sees the hardware config:
-    ```bash
-    nix eval --json .#nixosConfigurations.<hostname>.config.fileSystems
-    nix eval --json .#nixosConfigurations.<hostname>.config.boot.initrd.availableKernelModules
-    ```
-13. Build as `boot` (not `switch`) and reboot — if the new generation breaks, the previous one is still the default entry and you can roll back from the systemd-boot menu:
-    ```bash
-    sudo nixos-rebuild boot --flake .#<hostname>
+    nix run nixpkgs#nh -- os boot . -H <hostname>
     sudo reboot
     ```
-14. Once it comes up clean, `nixos-rebuild switch` for subsequent changes.
+11. After the machine comes up clean on the flake, `nh` is installed via
+    home-manager. From then on:
+    ```bash
+    nh os switch . -H <hostname>   # or: just deploy
+    ```
 
-After this, `/etc/nixos/configuration.nix` is no longer used — the flake owns everything.
+`/etc/nixos/configuration.nix` is no longer consulted after step 10 activates —
+the flake owns everything.
 
 ## Adding a host
 
@@ -229,11 +238,11 @@ For when the repo is already set up and you want to provision another machine.
    ```bash
    git add -A
    just diff                                        # shows the nvd closure diff
-   sudo nixos-rebuild boot --flake .#<hostname>
+   nh os boot . -H <hostname>
    sudo reboot
    ```
 
-   After the first clean boot, `just deploy` (or `sudo nixos-rebuild switch`) handles subsequent changes.
+   After the first clean boot, `just deploy` (or `nh os switch . -H <hostname>`) handles subsequent changes.
 
 ## Adding a feature module
 
@@ -279,14 +288,14 @@ Edit config, then apply:
 
 ```bash
 git add -A
-sudo nixos-rebuild switch --flake .#<hostname>
+nh os switch . -H <hostname>   # or: just deploy
 ```
 
 ## Updating packages
 
 ```bash
 nix flake update
-sudo nixos-rebuild switch --flake .#<hostname>
+nh os switch . -H <hostname>   # or: just upgrade (update + deploy)
 ```
 
 ## Garbage collection

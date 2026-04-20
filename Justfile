@@ -1,7 +1,7 @@
 host := `hostname`
 
 deploy:
-    NIXPKGS_ALLOW_UNFREE=1 nixos-rebuild switch --flake .#{{host}} --sudo --impure
+    NIXPKGS_ALLOW_UNFREE=1 nh os switch . -H {{host}} -- --impure
 
 alias build := deploy
 
