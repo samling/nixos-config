@@ -18,6 +18,7 @@
       tailscale
       inotify-tools
       fd
+      psmisc
       just
       ripgrep
       duf
