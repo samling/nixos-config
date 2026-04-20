@@ -14,7 +14,6 @@
       btop
       htop
       zoxide
-      direnv
       tailscale
       inotify-tools
       fd
@@ -38,6 +37,11 @@
       chezmoi
       doppler
     ];
+
+    programs.direnv = {
+      enable = true;
+      nix-direnv.enable = true;
+    };
 
     home.file.".config/bat/config".text = ''
       --theme="Catppuccin Mocha"

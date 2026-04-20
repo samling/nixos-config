@@ -4,6 +4,7 @@
     imports = with config.flake.modules.homeManager; [
       cli-core
       dev-tools
+      nix-tools
       git
       zsh
       neovim
