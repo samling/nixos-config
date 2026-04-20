@@ -35,7 +35,7 @@ return {
 
     -- Open preview in a new browser window instead of a new tab
     require("markdown_preview.util").open_in_browser = function(url)
-      vim.fn.jobstart({ "google-chrome-stable", "--new-window", url }, { detach = true })
+      vim.fn.jobstart({ "google-chrome", "--new-window", url }, { detach = true })
     end
   end,
 }

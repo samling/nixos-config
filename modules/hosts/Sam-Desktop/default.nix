@@ -1,35 +1,22 @@
 {
   flake.modules.nixos."Sam-Desktop" = { pkgs, ... }: let
-    realChrome = pkgs.google-chrome.override { commandLineArgs = "--disable-pinch"; };
+    # Hand URLs to the host's Chrome via WSL interop instead of running a
+    # Linux Chrome under WSLg. chrome.exe accepts http(s) URLs directly.
+    winChrome = "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe";
 
-    # NixOS-WSL's /init spawns login shells directly into user-1000.slice,
-    # which prevents user@1000.service from starting and leaves
-    # /run/user/1000/bus missing. Chrome prints non-fatal dbus errors in that
-    # state, but on WSLg it also fails to produce a visible window. Wrap
-    # chrome so the first invocation hops into dbus-run-session to get an
-    # ephemeral session bus.
     chromeWrapper = pkgs.writeShellScriptBin "google-chrome" ''
-      if [ -z "$_CHROME_DBUS_WRAPPED" ] && [ ! -S "''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/bus" ]; then
-        export _CHROME_DBUS_WRAPPED=1
-        exec ${pkgs.dbus}/bin/dbus-run-session -- "$0" "$@"
-      fi
-      exec ${realChrome}/bin/google-chrome "$@"
+      exec "${winChrome}" "$@"
     '';
   in {
     networking.hostName = "Sam-Desktop";
     nixpkgs.hostPlatform = "x86_64-linux";
 
     home-manager.users.sboynton = {
-      # Chrome for WSLg: lets browser-based auth popups (gcloud, tsh, etc.)
-      # render through WSLg without pulling in the full desktop stack. Only
-      # the wrapper goes on PATH; realChrome is pulled into the closure via
-      # the wrapper's exec path. xdg-utils provides a real xdg-open so CLIs
-      # like tsh (which shell out to xdg-open and ignore $BROWSER) can open
-      # a browser.
+      # xdg-utils gives us a real xdg-open so CLIs like tsh (which shell out
+      # to xdg-open and ignore $BROWSER) resolve via mimeApps → the desktop
+      # entry below → the Windows Chrome wrapper.
       home.packages = [ chromeWrapper pkgs.xdg-utils ];
 
-      # User-level desktop entry shadows the one shipped with the chrome
-      # package so xdg-open routes through our dbus-wrapping shim.
       xdg.desktopEntries.google-chrome = {
         name = "Google Chrome";
         genericName = "Web Browser";
