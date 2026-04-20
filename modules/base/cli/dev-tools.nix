@@ -4,8 +4,9 @@
       go
       gcc
       gnumake
-      npx
+      nodejs_22
       python3
+      uv
     ];
   };
 }
