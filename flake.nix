@@ -64,7 +64,7 @@
               nix-ld
               asus
               keyd
-              littlesnitch
+              security
               xen
             ];
             home = with config.flake.modules.homeManager; [
