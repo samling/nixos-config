@@ -7,11 +7,14 @@ local is_windows = vim.fn.has "win32" or vim.fn.has "win64"
 local is_mac = vim.fn.has "macunix"
 local is_unix = vim.fn.has "unix"
 
+-- Clipboard provider for explicit "+y / "+p. We intentionally do NOT set
+-- clipboard=unnamedplus: on Wayland, routing every yank/delete through wl-copy
+-- forks a process per op and noticeably lags x/dw/etc. Yanks are mirrored to
+-- the system clipboard asynchronously via the TextYankPost autocmd below.
 vim.api.nvim_create_autocmd({ "BufNew", "BufReadPost", "BufNewFile" }, {
   once = true,
   callback = function()
     if is_windows == 1 and not is_wsl == 1 then
-      print "Using Windows clipboard."
       vim.g.clipboard = {
         copy = {
           ["+"] = "win32yank.exe -i --crlf",
@@ -24,7 +27,6 @@ vim.api.nvim_create_autocmd({ "BufNew", "BufReadPost", "BufNewFile" }, {
         cache_enabled = 0,
       }
     elseif is_mac == 1 then
-      print "Using Mac clipboard."
       vim.g.clipboard = {
         copy = {
           ["+"] = "pbcopy",
@@ -36,51 +38,43 @@ vim.api.nvim_create_autocmd({ "BufNew", "BufReadPost", "BufNewFile" }, {
         },
         cache_enabled = 0,
       }
-    elseif is_unix == 1 or is_wsl == 1 then
-      print "Using Linux clipboard with wl-clipboard."
-      if vim.fn.executable "wl-copy" == 1 then
-        vim.g.clipboard = {
-          copy = {
-            ["+"] = "wl-copy",
-            ["*"] = "wl-copy",
-          },
-          paste = {
-            ["+"] = "wl-paste -n",
-            ["*"] = "wl-paste -n",
-          },
-          cache_enabled = 0,
-        }
-      -- elseif vim.fn.executable "xsel" == 1 then
-      --   print "Using Linux clipboard with xsel."
-      --   vim.g.clipboard = {
-      --     copy = {
-      --       ["+"] = "xsel --clipboard --input",
-      --       ["*"] = "xsel --clipboard --input",
-      --     },
-      --     paste = {
-      --       ["+"] = "xsel --clipboard --output",
-      --       ["*"] = "xsel --clipboard --output",
-      --     },
-      --     cache_enabled = 0,
-      --   }
-      -- elseif vim.fn.executable "xclip" == 1 then
-      --   vim.g.clipboard = {
-      --     copy = {
-      --       ["+"] = "xclip -selection clipboard",
-      --       ["*"] = "xclip -selection clipboard",
-      --     },
-      --     paste = {
-      --       ["+"] = "xclip -selection clipboard -o",
-      --       ["*"] = "xclip -selection clipboard -o",
-      --     },
-      --     cache_enabled = 0,
-      --   }
-      end
+    elseif (is_unix == 1 or is_wsl == 1) and vim.fn.executable "wl-copy" == 1 then
+      vim.g.clipboard = {
+        copy = {
+          ["+"] = "wl-copy",
+          ["*"] = "wl-copy",
+        },
+        paste = {
+          ["+"] = "wl-paste -n",
+          ["*"] = "wl-paste -n",
+        },
+        cache_enabled = 0,
+      }
     end
-
-    vim.opt.clipboard = "unnamedplus"
   end,
-  desc = "Lazy load clipboard",
+  desc = "Lazy load clipboard provider",
+})
+
+vim.api.nvim_create_autocmd("TextYankPost", {
+  callback = function()
+    local event = vim.v.event
+    if event.operator ~= "y" then return end
+
+    local cmd
+    if is_mac == 1 then
+      cmd = { "pbcopy" }
+    elseif is_windows == 1 and is_wsl ~= 1 then
+      cmd = { "win32yank.exe", "-i", "--crlf" }
+    elseif vim.fn.executable("wl-copy") == 1 then
+      cmd = { "wl-copy" }
+    end
+    if not cmd then return end
+
+    local text = table.concat(event.regcontents, "\n")
+    if event.regtype == "V" then text = text .. "\n" end
+    vim.system(cmd, { stdin = text })
+  end,
+  desc = "Async mirror yanks to system clipboard",
 })
 
 -- LSP AutoAttach
