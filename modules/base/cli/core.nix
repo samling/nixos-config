@@ -7,6 +7,7 @@
       viddy
       killall
       read-edid
+      lsof
       v4l-utils
       libnotify
       glib
@@ -31,6 +32,7 @@
       yq
       claude-code
       toofan
+      gitoverit
       littlesnitch
 
       # Used by chezmoi apply scoped to ~/.claude and ~/.ssh

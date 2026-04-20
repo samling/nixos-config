@@ -16,10 +16,14 @@ upgrade: && deploy
     nix flake update
 
 update-pkgs:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    for p in pkgs/*/; do
-      name=$(basename "$p")
-      echo "==> $name"
-      nix run nixpkgs#nix-update -- --flake "$name" || true
+    for p in pkgs/*/; do \
+      name=$(basename "$p"); \
+      echo "==> $name"; \
+      if [ -x "$p/update.sh" ]; then \
+        "$p/update.sh"; \
+      else \
+        nix run nixpkgs#nix-update -- --flake "$name" \
+          || nix run nixpkgs#nix-update -- --flake --version=branch "$name" \
+          || true; \
+      fi; \
     done

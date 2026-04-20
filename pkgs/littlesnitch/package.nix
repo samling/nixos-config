@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "littlesnitch";
-  version = "1.0.2-1";
+  version = "1.0.3-1";
 
   src = fetchurl {
     url = "https://obdev.at/downloads/littlesnitch-linux/littlesnitch-${finalAttrs.version}-x86_64.pkg.tar.zst";
-    hash = "sha256-GFGawy8NXr0TY/NQNOJtaKnQy/cqIs6Dhtx8h8OEIPc=";
+    hash = "sha256-ZmR7GSZobRA0uTMH5hfqxW+L2EOYefpjrOgOCWQYaG0=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook zstd ];
@@ -33,6 +33,8 @@ stdenv.mkDerivation (finalAttrs: {
                                                  $out/share/doc/littlesnitch/copyright
     runHook postInstall
   '';
+
+  passthru.updateScript = ./update.sh;
 
   meta = {
     description = "Little Snitch network monitor for Linux";
