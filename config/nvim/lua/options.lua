@@ -92,3 +92,6 @@ vim.opt.hlsearch = true
 
 -- Show a border around hovers
 --vim.o.winborder = 'single'
+
+-- Treat hyphen as a word separator
+vim.opt.iskeyword:remove("-")

@@ -77,6 +77,13 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   desc = "Async mirror yanks to system clipboard",
 })
 
+-- Force remove hyphen as keyword
+vim.api.nvim_create_autocmd("FileType", {
+  callback = function()
+    vim.opt_local.iskeyword:remove("-")
+  end,
+})
+
 -- LSP AutoAttach
 -- https://vonheikemen.github.io/devlog/tools/setup-nvim-lspconfig-plus-nvim-cmp/
 vim.api.nvim_create_autocmd('LspAttach', {
