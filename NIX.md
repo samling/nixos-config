@@ -10,19 +10,23 @@ every `.nix` file under `modules/` declares one or more reusable modules via
 flake.nix                                    # entry point — inputs; hands each host module to nixosSystem
 modules/base/                                # reusable feature modules
   system.nix                                 #   flake.modules.nixos.base (OS baseline, imports home-manager)
-  cli.nix                                    #   flake.modules.homeManager.cli (bundle)
-  cli/{core,git,zsh,neovim,tmux,…}.nix       #   per-tool HM modules composed by cli.nix
   desktop.nix                                #   nixos.desktop + homeManager.desktop (imports ghostty)
-  terminals/ghostty.nix                      #   flake.modules.homeManager.ghostty
   dev.nix                                    #   nixos.docker + nixos.nix-ld
-  hyprland.nix                               #   flake.modules.homeManager.hyprland (bundle — hyprland-specific only)
-  wayland.nix                                #   flake.modules.homeManager.wayland (generic wayland tools + clipboard daemons as systemd user services)
-  wayland/{awww,matugen,quickshell,rofi}.nix #   generic wayland tools composed by wayland.nix
-  wayland/hyprland/                          #   hyprland sub-modules composed by hyprland.nix
-    core.nix                                 #     enable + hypr-* packages + plugins + uwsm env + xwayland default
-    {theme,keywords,input,layout}.nix        #     settings (palette, $vars, input/gestures, general/decoration/animations)
-    {autostart,keybinds,plugins,windowrules}.nix
+  games.nix                                  #   flake.modules.nixos.games
+  work.nix                                   #   flake.modules.homeManager.work
   wsl.nix                                    #   flake.modules.nixos.wsl
+  cli/                                       # Collection — aggregator lives in default.nix, parts are siblings
+    default.nix                              #   flake.modules.homeManager.cli (bundle)
+    {core,git,zsh,neovim,tmux,…}.nix         #   per-tool HM modules
+  wayland/                                   # Collection for generic wayland tools
+    default.nix                              #   flake.modules.homeManager.wayland (bundle + clipboard daemons as systemd user services)
+    {awww,matugen,quickshell,rofi}.nix       #   generic wayland tools composed by wayland/default.nix
+    hyprland/                                # Nested collection for hyprland-specific modules
+      default.nix                            #     flake.modules.homeManager.hyprland (bundle)
+      core.nix                               #     enable + hypr-* packages + plugins + uwsm env + xwayland default
+      {theme,keywords,input,layout}.nix      #     settings (palette, $vars, input/gestures, general/decoration/animations)
+      {autostart,keybinds,plugins,windowrules}.nix
+  terminals/ghostty.nix                      #   flake.modules.homeManager.ghostty
   hardware/{asus,keyd}.nix
   security/littlesnitch.nix
 modules/hosts/<hostname>/
@@ -32,6 +36,11 @@ modules/users/<user>/default.nix             # flake.modules.homeManager.<user> 
 config/                                      # static dotfile sources (hypr scripts, nvim, tmux, zsh, …)
 pkgs/                                        # custom callPackage recipes
 ```
+
+**Convention:** a directory under `modules/base/` means a collection. Its
+`default.nix` is the aggregator module (`flake.modules.<class>.<name>`); the
+sibling `.nix` files are the parts it composes. Standalone feature modules
+(`desktop.nix`, `dev.nix`, `wsl.nix`) stay as single files — no collection needed.
 
 Every `.nix` under `modules/` is auto-discovered by
 [`import-tree`](https://github.com/vic/import-tree) — drop a new file in and
