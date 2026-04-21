@@ -49,52 +49,12 @@
           };
         };
 
-        flake.nixosConfigurations = let
-          mkHost = { system, home }: nixpkgs.lib.nixosSystem {
-            modules = system ++ [{
-              home-manager.users.sboynton.imports = home;
-            }];
+        flake.nixosConfigurations = {
+          xen = nixpkgs.lib.nixosSystem {
+            modules = [ config.flake.modules.nixos.xen ];
           };
-        in {
-          xen = mkHost {
-            system = with config.flake.modules.nixos; [
-              asus
-              base
-              desktop
-              docker
-              games
-              keyd
-              nix-ld
-              security
-              xen
-            ];
-            home = with config.flake.modules.homeManager; [
-              asus
-              cli
-              desktop
-              hyprland
-              wayland
-              keyd
-              sboynton
-            ];
-          };
-
-          "Sam-Desktop" = mkHost {
-            system = with config.flake.modules.nixos; [
-              base
-              nix-ld
-              games
-              wsl
-            # workaround for hyphen in the name
-            # calling Sam-Desktop would try to load module "Sam" minus module "Desktop"
-            ] ++ [
-              config.flake.modules.nixos."Sam-Desktop"
-            ];
-            home = with config.flake.modules.homeManager; [
-              cli
-              work
-              sboynton
-            ];
+          "Sam-Desktop" = nixpkgs.lib.nixosSystem {
+            modules = [ config.flake.modules.nixos."Sam-Desktop" ];
           };
         };
       };

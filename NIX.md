@@ -7,24 +7,29 @@ every `.nix` file under `modules/` declares one or more reusable modules via
 ## Repo structure
 
 ```
-flake.nix                                    # entry point — inputs, host composition
+flake.nix                                    # entry point — inputs; hands each host module to nixosSystem
 modules/base/                                # reusable feature modules
-  system.nix                                 #   flake.modules.nixos.base (OS baseline)
+  system.nix                                 #   flake.modules.nixos.base (OS baseline, imports home-manager)
   cli.nix                                    #   flake.modules.homeManager.cli (bundle)
   cli/{core,git,zsh,neovim,tmux,…}.nix       #   per-tool HM modules composed by cli.nix
   desktop.nix                                #   nixos.desktop + homeManager.desktop (imports ghostty)
   terminals/ghostty.nix                      #   flake.modules.homeManager.ghostty
   dev.nix                                    #   nixos.docker + nixos.nix-ld
-  hyprland.nix                               #   flake.modules.homeManager.hyprland (bundle)
-  wayland/{hyprland-core,quickshell,awww,rofi,matugen}.nix  # composed by hyprland.nix
+  hyprland.nix                               #   flake.modules.homeManager.hyprland (bundle — hyprland-specific only)
+  wayland.nix                                #   flake.modules.homeManager.wayland (generic wayland tools + clipboard daemons as systemd user services)
+  wayland/{awww,matugen,quickshell,rofi}.nix #   generic wayland tools composed by wayland.nix
+  wayland/hyprland/                          #   hyprland sub-modules composed by hyprland.nix
+    core.nix                                 #     enable + hypr-* packages + plugins + uwsm env + xwayland default
+    {theme,keywords,input,layout}.nix        #     settings (palette, $vars, input/gestures, general/decoration/animations)
+    {autostart,keybinds,plugins,windowrules}.nix
   wsl.nix                                    #   flake.modules.nixos.wsl
   hardware/{asus,keyd}.nix
   security/littlesnitch.nix
 modules/hosts/<hostname>/
-  default.nix                                # flake.modules.nixos.<hostname> (host switchboard)
+  default.nix                                # flake.modules.nixos.<hostname> — the composition aggregator for this host
   hardware-configuration.nix                 # regenerated via nixos-generate-config
 modules/users/<user>/default.nix             # flake.modules.homeManager.<user> (identity)
-config/                                      # static dotfile sources (hypr, nvim, tmux, zsh, …)
+config/                                      # static dotfile sources (hypr scripts, nvim, tmux, zsh, …)
 pkgs/                                        # custom callPackage recipes
 ```
 
@@ -41,33 +46,58 @@ and `flake.modules.homeManager.desktop` (user-level: GUI apps, theming). When
 a host imports `desktop` for nixos, it also imports `desktop` for homeManager —
 no platform subdirs needed.
 
-## Composition in flake.nix
+## Composition
 
-Hosts are **composed**, not gated. `flake.nix` lists the modules each host
-gets; unlisted modules are never evaluated.
+Hosts are **composed**, not gated. The host's own module file
+(`modules/hosts/<hostname>/default.nix`) is the composition aggregator: it
+declares which feature modules to pull in via its `imports` list, sets the
+hostname / boot loader / per-host overrides, and pulls home-manager modules
+into `home-manager.users.<user>.imports`. Unlisted modules are never evaluated.
 
 ```nix
-xen = mkHost {
-  system = with config.flake.modules.nixos; [
-    base desktop docker nix-ld asus keyd littlesnitch xen
-  ];
-  home = with config.flake.modules.homeManager; [
-    sboynton cli desktop hyprland asus
-  ];
-};
+# modules/hosts/xen/default.nix
+{ config, ... }:
+{
+  flake.modules.nixos.xen = {
+    imports = [ ./hardware-configuration.nix ] ++ (with config.flake.modules.nixos; [
+      asus base desktop docker games keyd nix-ld security
+    ]);
 
-"Sam-Desktop" = mkHost {
-  system = with config.flake.modules.nixos; [ base wsl ]
-    ++ [ config.flake.modules.nixos."Sam-Desktop" ];
-  home = with config.flake.modules.homeManager; [ sboynton cli ];
+    networking.hostName = "xen";
+    nixpkgs.hostPlatform = "x86_64-linux";
+
+    boot.loader.systemd-boot.enable = true;
+    boot.loader.efi.canTouchEfiVariables = true;
+
+    home-manager.users.sboynton = {
+      imports = with config.flake.modules.homeManager; [
+        asus cli desktop hyprland wayland keyd sboynton
+      ];
+
+      # Per-host overrides live in the host module too.
+      wayland.windowManager.hyprland.settings.monitor = [ ",preferred,auto,1.5" ];
+    };
+
+    system.stateVersion = "25.11";
+  };
+}
+```
+
+`flake.nix` only has to hand the host module to `nixosSystem`:
+
+```nix
+flake.nixosConfigurations = {
+  xen = nixpkgs.lib.nixosSystem {
+    modules = [ config.flake.modules.nixos.xen ];
+  };
+  "Sam-Desktop" = nixpkgs.lib.nixosSystem {
+    modules = [ config.flake.modules.nixos."Sam-Desktop" ];
+  };
 };
 ```
 
-`mkHost` feeds the `system` list as nixos modules and pulls `home` into
-`home-manager.users.sboynton.imports`. The host's own `flake.modules.nixos.<hostname>`
-(e.g. `xen`) is just another module in the list — it sets `networking.hostName`,
-boot loader, hardware-configuration.nix import, and any HM customizations
-specific to that machine (like `my.home.hyprland.monitors`).
+Adding a machine is one new directory under `modules/hosts/` plus one line in
+`flake.nix`. Feature modules are swapped by editing a single host file.
 
 ## Build flow
 
@@ -75,18 +105,19 @@ specific to that machine (like `my.home.hyprland.monitors`).
 flowchart TB
     U([just deploy]):::entry
     U --> R[nixos-rebuild switch<br/>--flake .#HOST]
-    R --> F[[flake.nix<br/>mkHost for HOST]]:::flake
+    R --> F[[flake.nix<br/>nixosSystem { modules = [ HOST ] }]]:::flake
 
-    F --> SYS[system list<br/>base + feature modules<br/>+ HOST switchboard]:::group
-    F --> HM[home list<br/>sboynton + cli + feature modules]:::group
+    F --> hostMod[hosts/HOST/default.nix<br/>━━━━━<br/>composition aggregator<br/>hostname · boot loader<br/>hardware-configuration<br/>per-host overrides<br/>stateVersion]:::host
 
-    SYS --> bN[base system.nix<br/>kernel · locale · user · overlays]:::always
-    SYS --> hostMod[hosts/HOST/default.nix<br/>━━━━━<br/>hostname · boot loader<br/>hardware-configuration<br/>stateVersion]:::host
+    hostMod --> SYS[imports list<br/>system feature modules]:::group
+    hostMod --> HM[home-manager.users.USER.imports<br/>home feature modules]:::group
+
+    SYS --> bN[base system.nix<br/>kernel · locale · user · overlays<br/>home-manager nixos module]:::always
     SYS --> featN[base feature modules<br/>desktop · docker · asus · …]:::feature
 
     HM --> usr[users/sboynton<br/>identity]:::always
     HM --> cli[base cli.nix<br/>CLI tools]:::always
-    HM --> featH[base HM modules<br/>desktop · hyprland · asus · …]:::feature
+    HM --> featH[base HM modules<br/>desktop · hyprland · wayland · asus · …]:::feature
 
     featN -. imports .-> ih[inputs.hyprland]:::input
     featN -. imports .-> ia[inputs.asus-fan]:::input
@@ -102,11 +133,11 @@ flowchart TB
 ```
 
 **Reading it:**
-- **Yellow host file** is the only thing a new machine has to write. It declares
-  `flake.modules.nixos.<hostname>` with hostname, boot loader, hardware import,
-  and any HM customization.
-- **Green "always" modules** (`base system`, `cli`, user identity) are in every host's list.
-- **Pink feature modules** are included per-host in `flake.nix` — WSL doesn't get
+- **Yellow host file** is the composition aggregator — it's where a new
+  machine's module list, hostname, boot loader, hardware import, and per-host
+  overrides all live. `flake.nix` just hands it to `nixosSystem`.
+- **Green "always" modules** (`base system`, `cli`, user identity) appear in every host's imports.
+- **Pink feature modules** are included per-host by editing the host file — WSL doesn't get
   hyprland, xen doesn't get nixos-wsl.
 - **Dashed grey upstream imports** (hyprland, asus-fan, nixos-wsl) are pulled in
   by their feature modules, so unused inputs don't evaluate.
@@ -179,11 +210,15 @@ For when the repo is already set up and you want to provision another machine.
    sudo nixos-generate-config --show-hardware-config > modules/hosts/<hostname>/hardware-configuration.nix
    ```
 
-2. Write `modules/hosts/<hostname>/default.nix`. Typical laptop:
+2. Write `modules/hosts/<hostname>/default.nix` — the composition aggregator.
+   Typical laptop running hyprland:
    ```nix
+   { config, ... }:
    {
      flake.modules.nixos.<hostname> = {
-       imports = [ ./hardware-configuration.nix ];
+       imports = [ ./hardware-configuration.nix ] ++ (with config.flake.modules.nixos; [
+         base desktop keyd      # pick the system-level features this host needs
+       ]);
 
        networking.hostName = "<hostname>";
        nixpkgs.hostPlatform = "x86_64-linux";
@@ -191,48 +226,60 @@ For when the repo is already set up and you want to provision another machine.
        boot.loader.systemd-boot.enable = true;
        boot.loader.efi.canTouchEfiVariables = true;
 
+       home-manager.users.sboynton = {
+         imports = with config.flake.modules.homeManager; [
+           cli desktop hyprland wayland sboynton
+         ];
+
+         # Per-host overrides go here too, e.g. monitor layout:
+         wayland.windowManager.hyprland.settings.monitor = [
+           ",preferred,auto,1.5"
+         ];
+       };
+
        system.stateVersion = "25.11";
      };
    }
    ```
 
-   For WSL: drop the hardware-configuration import and boot loader (`nixos-wsl` handles both):
+   For WSL, drop hardware import + boot loader (`nixos-wsl` handles both) and
+   keep the home list lean:
    ```nix
+   { config, ... }:
    {
      flake.modules.nixos.<hostname> = {
+       imports = with config.flake.modules.nixos; [ base wsl ];
+
        networking.hostName = "<hostname>";
        nixpkgs.hostPlatform = "x86_64-linux";
+
+       home-manager.users.sboynton.imports = with config.flake.modules.homeManager; [
+         cli sboynton
+       ];
+
        system.stateVersion = "25.11";
      };
    }
    ```
 
-3. Register and compose in `flake.nix`:
+3. Register the host in `flake.nix` — one line per host:
    ```nix
-   <hostname> = mkHost {
-     system = with config.flake.modules.nixos; [
-       base desktop keyd      # pick the features this host needs
-       <hostname>             # the host's own module
-     ];
-     home = with config.flake.modules.homeManager; [
-       sboynton cli desktop hyprland
-     ];
+   flake.nixosConfigurations.<hostname> = nixpkgs.lib.nixosSystem {
+     modules = [ config.flake.modules.nixos.<hostname> ];
    };
    ```
 
-   For WSL / headless, keep `system = [ base wsl <hostname> ]; home = [ sboynton cli ];`.
-
-4. If this machine needs a hyprland monitor override or other per-host HM tweak,
-   add it to the host's `default.nix`:
+4. Multi-monitor? Add more entries to the `settings.monitor` list in the host
+   module. The compositor-wide `xwayland.force_zero_scaling = true` default
+   already lives in `wayland/hyprland/core.nix`, so hosts only need the
+   per-display lines:
    ```nix
-   home-manager.users.sboynton.my.home.hyprland.monitors = ''
-     monitor=,preferred,auto,1.5
-
-     xwayland {
-       force_zero_scaling = true
-     }
-   '';
+   wayland.windowManager.hyprland.settings.monitor = [
+     "eDP-1,1920x1200@60,0x0,1.5"
+     "DP-1,3840x2160@60,1920x0,2.0"
+   ];
    ```
+   Omit entirely to let hyprland auto-detect.
 
 5. Stage (flakes ignore untracked files), preview, build as `boot`, reboot:
    ```bash
@@ -260,9 +307,11 @@ For when the repo is already set up and you want to provision another machine.
      };
    }
    ```
-3. Add `<feature>` to the relevant host's `system` / `home` list in `flake.nix`.
+3. Add `<feature>` to the relevant host's `imports` (for nixos features) or
+   `home-manager.users.<user>.imports` (for HM features) in
+   `modules/hosts/<hostname>/default.nix`.
 
-No `my.*.enable` toggles — if a module is in a host's list, it's on; if not, it's never evaluated.
+No `my.*.enable` toggles — if a module is in a host's imports list, it's on; if not, it's never evaluated.
 
 ## Emergency mode / wait-job on a UUID
 

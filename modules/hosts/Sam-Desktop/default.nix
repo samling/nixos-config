@@ -1,3 +1,4 @@
+{ config, ... }:
 {
   flake.modules.nixos."Sam-Desktop" = { pkgs, ... }: let
     # Hand URLs to the host's Chrome via WSL interop instead of running a
@@ -8,10 +9,23 @@
       exec "${winChrome}" "$@"
     '';
   in {
+    imports = with config.flake.modules.nixos; [
+      base
+      nix-ld
+      games
+      wsl
+    ];
+
     networking.hostName = "Sam-Desktop";
     nixpkgs.hostPlatform = "x86_64-linux";
 
     home-manager.users.sboynton = {
+      imports = with config.flake.modules.homeManager; [
+        cli
+        work
+        sboynton
+      ];
+
       # xdg-utils gives us a real xdg-open so CLIs like tsh (which shell out
       # to xdg-open and ignore $BROWSER) resolve via mimeApps → the desktop
       # entry below → the Windows Chrome wrapper.
