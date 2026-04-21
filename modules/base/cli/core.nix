@@ -5,9 +5,11 @@
       wget
       watch
       viddy
+      ranger
       killall
       read-edid
       lsof
+      glow
       v4l-utils
       libnotify
       glib

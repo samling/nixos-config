@@ -73,6 +73,7 @@
               cli
               desktop
               hyprland
+              wayland
               keyd
               sboynton
             ];

@@ -27,6 +27,8 @@
   };
 
   flake.modules.homeManager.keyd = { pkgs, ... }: {
+    home.packages = [ pkgs.keyd ];
+
     xdg.configFile."keyd/app.conf".text = ''
       [google-chrome*]
       control+alt.[ = C-S-tab

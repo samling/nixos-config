@@ -1,9 +1,11 @@
 {
   flake.modules.homeManager.media = { pkgs, ... }: {
     home.packages = with pkgs; [
-      imagemagick
       chafa
+      feh
       ffmpeg
+      imagemagick
+      mpv
       yt-dlp
     ];
   };

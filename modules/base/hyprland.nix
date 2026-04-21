@@ -3,10 +3,14 @@
   flake.modules.homeManager.hyprland = {
     imports = with config.flake.modules.homeManager; [
       hyprland-core
-      quickshell
-      awww
-      rofi
-      matugen
+      hyprland-theme
+      hyprland-keywords
+      hyprland-input
+      hyprland-layout
+      hyprland-autostart
+      hyprland-keybinds
+      hyprland-plugins
+      hyprland-windowrules
     ];
   };
 }
