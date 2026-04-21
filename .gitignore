@@ -7,3 +7,5 @@ log
 .bwpass
 .serena
 result
+private.nix
+private-inputs.nix

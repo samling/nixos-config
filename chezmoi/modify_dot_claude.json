@@ -48,6 +48,10 @@
         "Authorization" (printf "Bearer %s" $githubClaudeCodePAT)
       )
     )
+    "nixos" (dict
+      "command" "uvx"
+      "args" (list "mcp-nixos")
+    )
 -}}
 
 {{- $config = $config | setValueAtPath "mcpServers" $mcpServers -}}
