@@ -1,7 +1,7 @@
 host := `hostname`
 
 deploy:
-    NIXPKGS_ALLOW_UNFREE=1 nh os switch --no-nom --log-format bar-with-logs . -H {{host}} -- --impure
+    NIXPKGS_ALLOW_UNFREE=1 nh os switch --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
 
 alias build := deploy
 
