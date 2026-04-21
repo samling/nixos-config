@@ -84,9 +84,6 @@
       obsidian
       vscode-fhs
 
-      # Media
-      mpv
-
       # Audio / network / power applets
       bluez
       blueman
@@ -99,11 +96,7 @@
 
       # Disk / misc
       udiskie
-      distrobox
       parsec-bin
-
-      # Clipboard
-      wl-clipboard
 
       # Theming tools
       papirus-icon-theme
