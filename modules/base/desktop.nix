@@ -95,6 +95,7 @@
       playerctl
       brightnessctl
       lm_sensors
+      gnome-power-manager
 
       # Disk / misc
       udiskie
@@ -183,5 +184,15 @@
       [Troubleshooting]
       force_raster_widgets=1
     '';
+
+    xdg.desktopEntries."org.gnome.PowerStats" = {
+      name = "Power Statistics";
+      comment = "Observe power management";
+      exec = "gnome-power-statistics";
+      icon = "org.gnome.PowerStats";
+      terminal = false;
+      type = "Application";
+      categories = [ "GTK" "System" "Monitor" ];
+    };
   };
 }
