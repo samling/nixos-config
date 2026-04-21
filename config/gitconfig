@@ -46,7 +46,7 @@
         name = Sam Boynton
 
 [includeIf "gitdir:~/Documents/NVIDIA/"]
-        path = ~/nv-dotfiles/linux/config/git/gitconfig
+        path = ~/work-dotfiles/linux/config/git/gitconfig
 [init]
 	defaultBranch = main
 [credential]
