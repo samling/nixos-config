@@ -23,6 +23,7 @@
     home-manager.users.sboynton = {
       imports = with config.flake.modules.homeManager; [
         cli
+        games
         hyprland
         wayland
         sboynton

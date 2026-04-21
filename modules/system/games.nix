@@ -6,4 +6,10 @@
       remotePlay.openFirewall = true;
     };
   };
+
+  flake.modules.homeManager.games = { pkgs, ... }: {
+    home.packages = with pkgs; [
+      obs-studio
+    ];
+  };
 }
