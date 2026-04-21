@@ -1,6 +1,8 @@
 {
   flake.modules.homeManager.dev-tools = { pkgs, ... }: {
     home.packages = with pkgs; [
+      devbox
+      distrobox
       go
       gcc
       gnumake
