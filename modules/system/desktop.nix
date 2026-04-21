@@ -67,6 +67,7 @@
       })
       papirus-icon-theme
       rose-pine-cursor
+      xdg-user-dirs
     ];
   };
 
@@ -189,5 +190,16 @@
       type = "Application";
       categories = [ "GTK" "System" "Monitor" ];
     };
+
+    xdg.userDirs = {
+      enable = true;
+      createDirectories = true;
+      setSessionVariables = true;
+      download = "$HOME/Downloads";
+      documents = "$HOME/Documents";
+      desktop = null;
+      extraConfig.SCREENSHOTS = "$HOME/Pictures/Screenshots";
+    };
   };
+
 }

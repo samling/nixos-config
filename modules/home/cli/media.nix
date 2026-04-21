@@ -5,8 +5,12 @@
       feh
       ffmpeg
       ffmpegthumbnailer
+      grim
+      grimblast
       imagemagick
       mpv
+      satty
+      slurp
       yt-dlp
     ];
   };

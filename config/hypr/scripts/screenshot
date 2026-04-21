@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCREENSHOT_DIR="$(xdg-user-dir PICTURES)/Screenshots"
+SCREENSHOT_DIR="$(xdg-user-dir SCREENSHOTS)"
 DATE_FMT="%Y-%m-%d-%H%M%S"
 OUTFILE="$SCREENSHOT_DIR/screenshot-$(date +"$DATE_FMT").png"
 mkdir -p "$SCREENSHOT_DIR"
@@ -10,7 +10,7 @@ capture() {
     satty --filename - \
         --output-filename "$OUTFILE" \
         --early-exit \
-        --actions-on-enter save-to-clipboard \
+        --actions-on-enter save-to-clipboard,save-to-file \
         --copy-command 'wl-copy'
 }
 
