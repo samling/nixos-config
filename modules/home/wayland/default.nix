@@ -40,7 +40,7 @@
           After = [ "graphical-session.target" ];
         };
         Service = {
-          ExecStart = "${pkgs.clipse}/bin/clipse -listen";
+          ExecStart = "${pkgs.clipse}/bin/clipse -listen-shell";
           Restart = "on-failure";
         };
         Install.WantedBy = [ "graphical-session.target" ];

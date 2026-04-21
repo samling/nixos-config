@@ -33,6 +33,7 @@
       cmatrix
       jq
       yq
+      ts
       claude-code
       toofan
       gitoverit
