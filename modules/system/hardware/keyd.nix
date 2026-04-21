@@ -1,5 +1,8 @@
+{ config, ... }:
 {
   flake.modules.nixos.keyd = {
+    home-manager.sharedModules = [ config.flake.modules.homeManager.keyd ];
+
     services.keyd = {
       enable = true;
       keyboards.default = {

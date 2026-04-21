@@ -22,12 +22,9 @@
 
     home-manager.users.sboynton = {
       imports = with config.flake.modules.homeManager; [
-        asus
         cli
-        desktop
         hyprland
         wayland
-        keyd
         sboynton
       ];
 

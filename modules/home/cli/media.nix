@@ -4,6 +4,7 @@
       chafa
       feh
       ffmpeg
+      ffmpegthumbnailer
       imagemagick
       mpv
       yt-dlp

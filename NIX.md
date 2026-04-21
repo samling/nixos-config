@@ -8,39 +8,53 @@ every `.nix` file under `modules/` declares one or more reusable modules via
 
 ```
 flake.nix                                    # entry point — inputs; hands each host module to nixosSystem
-modules/base/                                # reusable feature modules
-  system.nix                                 #   flake.modules.nixos.base (OS baseline, imports home-manager)
-  desktop.nix                                #   nixos.desktop + homeManager.desktop (imports ghostty)
-  dev.nix                                    #   nixos.docker + nixos.nix-ld
-  games.nix                                  #   flake.modules.nixos.games
-  work.nix                                   #   flake.modules.homeManager.work
-  wsl.nix                                    #   flake.modules.nixos.wsl
-  cli/                                       # Collection — aggregator lives in default.nix, parts are siblings
-    default.nix                              #   flake.modules.homeManager.cli (bundle)
-    {core,git,zsh,neovim,tmux,…}.nix         #   per-tool HM modules
-  wayland/                                   # Collection for generic wayland tools
-    default.nix                              #   flake.modules.homeManager.wayland (bundle + clipboard daemons as systemd user services)
-    {awww,matugen,quickshell,rofi}.nix       #   generic wayland tools composed by wayland/default.nix
-    hyprland/                                # Nested collection for hyprland-specific modules
-      default.nix                            #     flake.modules.homeManager.hyprland (bundle)
-      core.nix                               #     enable + hypr-* packages + plugins + uwsm env + xwayland default
-      {theme,keywords,input,layout}.nix      #     settings (palette, $vars, input/gestures, general/decoration/animations)
-      {autostart,keybinds,plugins,windowrules}.nix
-  terminals/ghostty.nix                      #   flake.modules.homeManager.ghostty
-  hardware/{asus,keyd}.nix
-  security/littlesnitch.nix
-modules/hosts/<hostname>/
-  default.nix                                # flake.modules.nixos.<hostname> — the composition aggregator for this host
-  hardware-configuration.nix                 # regenerated via nixos-generate-config
-modules/users/<user>/default.nix             # flake.modules.homeManager.<user> (identity)
+modules/
+  system/                                    # host's nixos `imports` pulls from here (pure-nixos + dual-class)
+    base.nix                                 #   flake.modules.nixos.base (OS baseline, imports home-manager)
+    desktop.nix                              #   dual-class — nixos.desktop + homeManager.desktop (imports ghostty)
+    dev.nix                                  #   nixos.docker + nixos.nix-ld
+    games.nix                                #   flake.modules.nixos.games
+    wsl.nix                                  #   flake.modules.nixos.wsl
+    hardware/
+      asus.nix                               #   dual-class
+      keyd.nix                               #   dual-class
+    security/                                #   Collection
+      default.nix                            #     flake.modules.nixos.security (bundle)
+      {core,littlesnitch}.nix
+  home/                                      # host's `home-manager.users.<user>.imports` pulls from here (HM-only)
+    work.nix                                 #   flake.modules.homeManager.work
+    cli/                                     #   Collection
+      default.nix                            #     flake.modules.homeManager.cli (bundle)
+      {core,git,zsh,neovim,tmux,…}.nix       #     per-tool HM modules
+    wayland/                                 #   Collection — generic wayland tools
+      default.nix                            #     flake.modules.homeManager.wayland (bundle + clipboard daemons as systemd user services)
+      {awww,matugen,quickshell,rofi}.nix
+      hyprland/                              #     Nested collection for hyprland-specific modules
+        default.nix                          #       flake.modules.homeManager.hyprland (bundle)
+        core.nix                             #       enable + hypr-* packages + plugins + uwsm env + xwayland default
+        {theme,keywords,input,layout}.nix    #       settings (palette, $vars, input/gestures, general/decoration/animations)
+        {autostart,keybinds,plugins,windowrules}.nix
+    terminals/
+      ghostty.nix                            #   flake.modules.homeManager.ghostty
+  hosts/<hostname>/
+    default.nix                              # flake.modules.nixos.<hostname> — the composition aggregator for this host
+    hardware-configuration.nix               # regenerated via nixos-generate-config
+  users/<user>/default.nix                   # flake.modules.homeManager.<user> (identity)
 config/                                      # static dotfile sources (hypr scripts, nvim, tmux, zsh, …)
 pkgs/                                        # custom callPackage recipes
 ```
 
-**Convention:** a directory under `modules/base/` means a collection. Its
-`default.nix` is the aggregator module (`flake.modules.<class>.<name>`); the
-sibling `.nix` files are the parts it composes. Standalone feature modules
-(`desktop.nix`, `dev.nix`, `wsl.nix`) stay as single files — no collection needed.
+**Top-level layout:** `modules/system/` and `modules/home/` map directly to the
+two `imports` lists in a host module. `system/` contains nixos modules (plus
+dual-class modules — their HM side is auto-wired via `sharedModules`, so the
+host still only lists them here). `home/` contains HM-only modules. No need to
+open a file to find out where it goes.
+
+**Collections convention:** a directory under `system/` or `home/` is a
+collection. Its `default.nix` is the aggregator module
+(`flake.modules.<class>.<name>`); the sibling `.nix` files are the parts it
+composes. Standalone feature modules (`desktop.nix`, `dev.nix`, `wsl.nix`,
+`work.nix`, `terminals/ghostty.nix`) stay as single files — no collection needed.
 
 Every `.nix` under `modules/` is auto-discovered by
 [`import-tree`](https://github.com/vic/import-tree) — drop a new file in and
@@ -51,9 +65,18 @@ and are imported by their host's `default.nix` directly.
 Modules have a **class** (`nixos`, `homeManager`, later `darwin`) and a **name**.
 One file can declare multiple classes — `desktop.nix` declares both
 `flake.modules.nixos.desktop` (system-level: portal, hyprland service, audio)
-and `flake.modules.homeManager.desktop` (user-level: GUI apps, theming). When
-a host imports `desktop` for nixos, it also imports `desktop` for homeManager —
-no platform subdirs needed.
+and `flake.modules.homeManager.desktop` (user-level: GUI apps, theming).
+
+**Dual-class auto-wiring:** when a module declares both a nixos and a
+homeManager side, the nixos side pulls its HM counterpart in via
+`home-manager.sharedModules = [ config.flake.modules.homeManager.<name> ]`.
+Hosts only list dual-class modules in their nixos `imports` — the HM side
+tags along automatically for every configured user. See `desktop.nix`,
+`hardware/asus.nix`, `hardware/keyd.nix` for the pattern.
+
+HM-only modules (`cli`, `hyprland`, `wayland`, user identity) have no nixos
+side to do the auto-wiring, so they're listed explicitly in the host's
+`home-manager.users.<user>.imports`.
 
 ## Composition
 
@@ -225,8 +248,10 @@ For when the repo is already set up and you want to provision another machine.
    { config, ... }:
    {
      flake.modules.nixos.<hostname> = {
+       # Dual-class modules (desktop, keyd, asus, …) auto-wire their
+       # homeManager side — list them here only.
        imports = [ ./hardware-configuration.nix ] ++ (with config.flake.modules.nixos; [
-         base desktop keyd      # pick the system-level features this host needs
+         base desktop keyd
        ]);
 
        networking.hostName = "<hostname>";
@@ -236,8 +261,10 @@ For when the repo is already set up and you want to provision another machine.
        boot.loader.efi.canTouchEfiVariables = true;
 
        home-manager.users.sboynton = {
+         # HM-only modules (cli, hyprland, wayland, user identity) — no
+         # nixos counterpart to carry them, so list them explicitly.
          imports = with config.flake.modules.homeManager; [
-           cli desktop hyprland wayland sboynton
+           cli hyprland wayland sboynton
          ];
 
          # Per-host overrides go here too, e.g. monitor layout:
@@ -302,7 +329,10 @@ For when the repo is already set up and you want to provision another machine.
 
 ## Adding a feature module
 
-1. Create `modules/base/<feature>.nix` (or `modules/base/<category>/<feature>.nix`).
+1. Decide where it goes:
+   - Pure-nixos or dual-class → `modules/system/<feature>.nix`
+   - HM-only → `modules/home/<feature>.nix`
+   - Has sub-parts → make it a directory with `default.nix` as the aggregator.
 2. Declare one or more module classes:
    ```nix
    { inputs, ... }:   # optional — only if the module uses flake inputs

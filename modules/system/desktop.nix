@@ -3,6 +3,8 @@
   flake.modules.nixos.desktop = { lib, pkgs, ... }: {
     imports = [ inputs.hyprland.nixosModules.default ];
 
+    home-manager.sharedModules = [ config.flake.modules.homeManager.desktop ];
+
     programs.hyprland = {
       enable = true;
       withUWSM = true;

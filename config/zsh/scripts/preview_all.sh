@@ -60,6 +60,11 @@ case "$mime" in
 	image/jpeg|image/png|image/webp|image/gif)
     kitten icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0" "$filepath" 2>/dev/null
     ;;
+	video/*)
+		thumb_cache=$(mktemp "${TMPDIR:-/tmp}/thumb_cache.XXXXX.png")
+		ffmpegthumbnailer -i "$filepath" -o "$thumb_cache" -s 0 -q 10 2>/dev/null
+		kitten icat --clear --transfer-mode=memory --unicode-placeholder --stdin=no --place="${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0" "$thumb_cache" 2>/dev/null
+		;;
 	#	# Use magick to display images in the terminal using sixel
 	#	magick "$filepath" -geometry 800x480 sixel:-
 	#	;;
@@ -70,13 +75,6 @@ case "$mime" in
 	#application/epub+zip)
 	#	# Use epub2txt for EPUB files
 	#	epub2txt "$filepath" | head -n 1000 2>/dev/null
-	#	;;
-	#video/*)
-	#	# Generate a thumbnail for video files
-	#	thumb_cache=$(mktemp "${TMPDIR:-/tmp}/thumb_cache.XXXXX.png")
-	#	ffmpegthumbnailer -i "$filepath" -o "$thumb_cache" -s 0 2>/dev/null
-	#	# Display the thumbnail
-	#	img2sixel < "$thumb_cache" 2>/dev/null
 	#	;;
 	#application/x-tar | application/gzip | application/x-compressed-tar | application/x-bzip2 | application/x-xz | application/zip | application/x-7z-compressed | application/x-rar-compressed)
 	#	~/.config/lf/pistol-static-linux-x86_64 "$filepath" 2>/dev/null

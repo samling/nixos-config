@@ -1,7 +1,9 @@
-{ inputs, ... }:
+{ config, inputs, ... }:
 {
   flake.modules.nixos.asus = { pkgs, ... }: {
     imports = [ inputs.asus-fan.nixosModules.default ];
+
+    home-manager.sharedModules = [ config.flake.modules.homeManager.asus ];
 
     services.asus-fan-state = {
       enable = true;
