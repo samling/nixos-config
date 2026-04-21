@@ -25,16 +25,14 @@
       url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-  } // (if builtins.pathExists ./private-inputs.nix
-        then import ./private-inputs.nix
-        else {});
+  };
 
   outputs = inputs@{ flake-parts, import-tree, nixpkgs, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } ({ config, lib, ... }: {
       imports = [
         (import-tree.filterNot (lib.hasSuffix "hardware-configuration.nix") ./modules)
         (import-tree.filterNot (lib.hasSuffix "/package.nix") ./pkgs)
-      ] ++ lib.optional (builtins.pathExists ./private.nix) ./private.nix;
+      ] ++ lib.optional (builtins.pathExists /home/sboynton/nv-dotfiles/default.nix) /home/sboynton/nv-dotfiles/default.nix;
 
       options.flake.modules = lib.mkOption {
         type = lib.types.lazyAttrsOf (lib.types.lazyAttrsOf lib.types.deferredModule);
