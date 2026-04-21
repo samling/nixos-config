@@ -1,6 +1,7 @@
 {
   flake.modules.homeManager.work = { pkgs, ... }: {
     home.packages = with pkgs; [
+      nvault
       teleport-bin
       vault-bin
     ];
