@@ -13,7 +13,7 @@
       yaml-language-server
       dockerfile-language-server
       buf
-      nil
+      nixd
 
       # Formatters
       stylua
