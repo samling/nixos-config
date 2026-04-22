@@ -45,19 +45,22 @@
       };
     };
 
-    services.pipewire = {
-      enable = true;
-      pulse.enable = true;
+    services = {
+      pipewire = {
+        enable = true;
+        pulse.enable = true;
+      };
+
+      blueman.enable = true;
+      upower.enable = true;
+      power-profiles-daemon.enable = true;
+      udisks2.enable = true;
     };
 
-    hardware.bluetooth.enable = true;
-    hardware.bluetooth.powerOnBoot = true;
-    services.blueman.enable = true;
-
-    services.upower.enable = true;
-    services.power-profiles-daemon.enable = true;
-
-    services.udisks2.enable = true;
+    hardware.bluetooth = {
+      enable = true;
+      powerOnBoot = true;
+    };
 
     environment.systemPackages = with pkgs; [
       (catppuccin-gtk.override {
@@ -74,57 +77,85 @@
   flake.modules.homeManager.desktop = { pkgs, ... }: {
     imports = with config.flake.modules.homeManager; [ ghostty ];
 
-    home.packages = with pkgs; [
-      # Terminals / file manager
-      kitty
-      thunar
+    home = {
+      packages = with pkgs; [
+        # Terminals / file manager
+        kitty
+        thunar
 
-      # Browsers / chat / editors
-      (google-chrome.override {
-        commandLineArgs = "--disable-pinch";
-      })
-      vesktop
-      obsidian
-      vscode-fhs
+        # Browsers / chat / editors
+        (google-chrome.override {
+          commandLineArgs = "--disable-pinch";
+        })
+        vesktop
+        obsidian
+        vscode-fhs
 
-      # Audio / network / power applets
-      bluez
-      blueman
-      networkmanagerapplet
-      pulseaudio
-      playerctl
-      brightnessctl
-      lm_sensors
-      gnome-power-manager
+        # Audio / network / power applets
+        bluez
+        blueman
+        networkmanagerapplet
+        pulseaudio
+        playerctl
+        brightnessctl
+        lm_sensors
+        gnome-power-manager
 
-      # Disk / misc
-      udiskie
-      parsec-bin
+        # Disk / misc
+        udiskie
+        parsec-bin
 
-      # Theming tools
-      papirus-icon-theme
-      nwg-look
-      dconf
-      glib
-      qt6Packages.qt6ct
+        # Theming tools
+        papirus-icon-theme
+        nwg-look
+        dconf
+        glib
+        qt6Packages.qt6ct
 
-      # Fonts
-      nerd-fonts.jetbrains-mono
-      nerd-fonts.iosevka
-    ];
+        # Fonts
+        nerd-fonts.jetbrains-mono
+        nerd-fonts.iosevka
+      ];
+
+      pointerCursor = {
+        name = "BreezeX-RosePine-Linux";
+        package = pkgs.rose-pine-cursor;
+        size = 24;
+        gtk.enable = true;
+        hyprcursor.enable = true;
+      };
+
+      file = {
+        ".config/qt6ct/colors/catppuccin-mocha.conf".text = ''
+          [ColorScheme]
+          active_colors=#ffcdd6f4, #ff1e1e2e, #ff1e1e2e, #ff313244, #ff585b70, #ff6c7086, #ffcdd6f4, #ffcdd6f4, #ffcdd6f4, #ff1e1e2e, #ff313244, #ff585b70, #ff89b4fa, #ff1e1e2e, #ff89b4fa, #fff38ba8, #ff45475a, #ffcdd6f4, #ff181825, #ffcdd6f4, #80cdd6f4
+          disabled_colors=#ff6c7086, #ff1e1e2e, #ff1e1e2e, #ff313244, #ff585b70, #ff6c7086, #ff6c7086, #ff6c7086, #ff6c7086, #ff1e1e2e, #ff313244, #ff585b70, #ff89b4fa, #ff1e1e2e, #ff89b4fa, #fff38ba8, #ff45475a, #ffcdd6f4, #ff181825, #ffcdd6f4, #80cdd6f4
+          inactive_colors=#ffcdd6f4, #ff1e1e2e, #ff1e1e2e, #ff313244, #ff585b70, #ff6c7086, #ffcdd6f4, #ffcdd6f4, #ffcdd6f4, #ff1e1e2e, #ff313244, #ff585b70, #ff89b4fa, #ff1e1e2e, #ff89b4fa, #fff38ba8, #ff45475a, #ffcdd6f4, #ff181825, #ffcdd6f4, #80cdd6f4
+        '';
+
+        ".config/qt6ct/qt6ct.conf".text = ''
+          [Appearance]
+          icon_theme=Papirus-Dark
+          style=Fusion
+          custom_palette=true
+          color_scheme_path=/home/sboynton/.config/qt6ct/colors/catppuccin-mocha.conf
+
+          [Interface]
+          dialog_buttons_have_icons=1
+          menus_have_icons=true
+          show_shortcuts_in_context_menus=true
+          toolbutton_style=4
+
+          [Troubleshooting]
+          force_raster_widgets=1
+        '';
+      };
+    };
 
     services.udiskie = {
       enable = true;
       automount = false;
       tray = "auto";
-    };
-
-    home.pointerCursor = {
-      name = "BreezeX-RosePine-Linux";
-      package = pkgs.rose-pine-cursor;
-      size = 24;
-      gtk.enable = true;
-      hyprcursor.enable = true;
     };
 
     gtk = {
@@ -156,30 +187,6 @@
       enable = true;
       platformTheme.name = "qt6ct";
     };
-
-    home.file.".config/qt6ct/colors/catppuccin-mocha.conf".text = ''
-      [ColorScheme]
-      active_colors=#ffcdd6f4, #ff1e1e2e, #ff1e1e2e, #ff313244, #ff585b70, #ff6c7086, #ffcdd6f4, #ffcdd6f4, #ffcdd6f4, #ff1e1e2e, #ff313244, #ff585b70, #ff89b4fa, #ff1e1e2e, #ff89b4fa, #fff38ba8, #ff45475a, #ffcdd6f4, #ff181825, #ffcdd6f4, #80cdd6f4
-      disabled_colors=#ff6c7086, #ff1e1e2e, #ff1e1e2e, #ff313244, #ff585b70, #ff6c7086, #ff6c7086, #ff6c7086, #ff6c7086, #ff1e1e2e, #ff313244, #ff585b70, #ff89b4fa, #ff1e1e2e, #ff89b4fa, #fff38ba8, #ff45475a, #ffcdd6f4, #ff181825, #ffcdd6f4, #80cdd6f4
-      inactive_colors=#ffcdd6f4, #ff1e1e2e, #ff1e1e2e, #ff313244, #ff585b70, #ff6c7086, #ffcdd6f4, #ffcdd6f4, #ffcdd6f4, #ff1e1e2e, #ff313244, #ff585b70, #ff89b4fa, #ff1e1e2e, #ff89b4fa, #fff38ba8, #ff45475a, #ffcdd6f4, #ff181825, #ffcdd6f4, #80cdd6f4
-    '';
-
-    home.file.".config/qt6ct/qt6ct.conf".text = ''
-      [Appearance]
-      icon_theme=Papirus-Dark
-      style=Fusion
-      custom_palette=true
-      color_scheme_path=/home/sboynton/.config/qt6ct/colors/catppuccin-mocha.conf
-
-      [Interface]
-      dialog_buttons_have_icons=1
-      menus_have_icons=true
-      show_shortcuts_in_context_menus=true
-      toolbutton_style=4
-
-      [Troubleshooting]
-      force_raster_widgets=1
-    '';
 
     xdg.desktopEntries."org.gnome.PowerStats" = {
       name = "Power Statistics";

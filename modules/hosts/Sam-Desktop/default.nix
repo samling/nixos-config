@@ -31,30 +31,32 @@
       # entry below → the Windows Chrome wrapper.
       home.packages = [ chromeWrapper pkgs.xdg-utils ];
 
-      xdg.desktopEntries.google-chrome = {
-        name = "Google Chrome";
-        genericName = "Web Browser";
-        exec = "${chromeWrapper}/bin/google-chrome %U";
-        icon = "google-chrome";
-        categories = [ "Network" "WebBrowser" ];
-        mimeType = [
-          "text/html"
-          "x-scheme-handler/http"
-          "x-scheme-handler/https"
-          "x-scheme-handler/about"
-          "x-scheme-handler/unknown"
-        ];
-      };
+      xdg = {
+        desktopEntries.google-chrome = {
+          name = "Google Chrome";
+          genericName = "Web Browser";
+          exec = "${chromeWrapper}/bin/google-chrome %U";
+          icon = "google-chrome";
+          categories = [ "Network" "WebBrowser" ];
+          mimeType = [
+            "text/html"
+            "x-scheme-handler/http"
+            "x-scheme-handler/https"
+            "x-scheme-handler/about"
+            "x-scheme-handler/unknown"
+          ];
+        };
 
-      xdg.mime.enable = true;
-      xdg.mimeApps = {
-        enable = true;
-        defaultApplications = {
-          "text/html" = [ "google-chrome.desktop" ];
-          "x-scheme-handler/http" = [ "google-chrome.desktop" ];
-          "x-scheme-handler/https" = [ "google-chrome.desktop" ];
-          "x-scheme-handler/about" = [ "google-chrome.desktop" ];
-          "x-scheme-handler/unknown" = [ "google-chrome.desktop" ];
+        mime.enable = true;
+        mimeApps = {
+          enable = true;
+          defaultApplications = {
+            "text/html" = [ "google-chrome.desktop" ];
+            "x-scheme-handler/http" = [ "google-chrome.desktop" ];
+            "x-scheme-handler/https" = [ "google-chrome.desktop" ];
+            "x-scheme-handler/about" = [ "google-chrome.desktop" ];
+            "x-scheme-handler/unknown" = [ "google-chrome.desktop" ];
+          };
         };
       };
 
