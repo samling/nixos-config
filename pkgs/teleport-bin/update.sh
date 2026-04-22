@@ -4,7 +4,10 @@ set -euo pipefail
 
 cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 
-latest=$(curl -fsSL 'https://api.github.com/repos/gravitational/teleport/releases?per_page=100' \
+auth=()
+[[ -n "${GITHUB_TOKEN:-}" ]] && auth=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+
+latest=$(curl -fsSL "${auth[@]}" 'https://api.github.com/repos/gravitational/teleport/releases?per_page=100' \
   | jq -r '.[] | select(.prerelease == false and .draft == false) | .tag_name' \
   | sed 's/^v//' \
   | sort -V \
