@@ -1,9 +1,12 @@
 host := `hostname`
 
+boot:
+    NIXPKGS_ALLOW_UNFREE=1 nh os boot --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
+
 deploy:
     NIXPKGS_ALLOW_UNFREE=1 nh os switch --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
 
-alias build := deploy
+alias apply := deploy
 
 diff:
     NIXPKGS_ALLOW_UNFREE=1 nix build .#nixosConfigurations.{{host}}.config.system.build.toplevel --impure --out-link /tmp/nixos-result
@@ -12,10 +15,20 @@ diff:
 update:
     nix flake update
 
-upgrade: && deploy
-    nix flake update
+upgrade:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    [[ -n "${GITHUB_TOKEN:-}" ]] && export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"
+    just bump-pkgs
+    just update
+    git --no-pager diff
+    read -rp "Continue with switch? [y/N] " ans
+    [[ "$ans" == [yY]* ]] || exit 0
+    just deploy
+    git add flake.lock pkgs/
+    git commit -m "Upgrade flake inputs and packages" || true
 
-update-pkgs:
+bump-pkgs:
     for p in pkgs/*/; do \
       name=$(basename "$p"); \
       echo "==> $name"; \
