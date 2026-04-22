@@ -28,7 +28,7 @@
   };
 
   outputs = inputs@{ flake-parts, import-tree, nixpkgs, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } ({ config, lib, ... }: {
+    flake-parts.lib.mkFlake { inherit inputs; } ({ lib, ... }: {
       imports = [
         (import-tree.filterNot (lib.hasSuffix "hardware-configuration.nix") ./modules)
         (import-tree.filterNot (lib.hasSuffix "/package.nix") ./pkgs)
@@ -46,15 +46,6 @@
           _module.args.pkgs = import nixpkgs {
             inherit system;
             config.allowUnfree = true;
-          };
-        };
-
-        flake.nixosConfigurations = {
-          xen = nixpkgs.lib.nixosSystem {
-            modules = [ config.flake.modules.nixos.xen ];
-          };
-          "Sam-Desktop" = nixpkgs.lib.nixosSystem {
-            modules = [ config.flake.modules.nixos."Sam-Desktop" ];
           };
         };
       };
