@@ -3,7 +3,7 @@ let
   inherit (config.flake.meta) owner;
 in
 {
-  flake.modules.nixos.base = { config, ... }: {
+  flake.modules.nixos.tailscale = { config, ... }: {
     services.tailscale = {
       enable = true;
       extraSetFlags = [ "--operator=${owner.username}" ];
