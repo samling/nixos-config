@@ -1,5 +1,8 @@
 host := `hostname`
 
+# WSLg overlays /run/user/1000 with a noexec tmpfs, which breaks shebang recipes.
+export XDG_RUNTIME_DIR := "/tmp"
+
 boot:
     NIXPKGS_ALLOW_UNFREE=1 nh os boot --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
 
