@@ -7,6 +7,7 @@
       dev
       games
       laptop
+      tailscale
     ]);
   };
 }
