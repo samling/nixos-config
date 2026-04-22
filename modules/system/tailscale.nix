@@ -1,6 +1,9 @@
 {
   flake.modules.nixos.tailscale = { config, ... }: {
-    services.tailscale.enable = true;
+    services.tailscale = {
+      enable = true;
+      extraSetFlags = [ "--operator=sboynton" ];
+    };
     networking.nftables.enable = true;
     networking.firewall = {
       enable = true;
