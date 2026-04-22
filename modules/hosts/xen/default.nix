@@ -10,6 +10,7 @@
       keyd
       nix-ld
       security
+      tailscale
     ]);
 
     networking.hostName = "xen";

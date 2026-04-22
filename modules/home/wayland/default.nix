@@ -6,12 +6,14 @@
       awww
       rofi
       matugen
+      wallust
     ];
 
     home.packages = with pkgs; [
       copyq
       clipse
       clipse-gui
+      wallust
       wl-clipboard
       wtype
     ];

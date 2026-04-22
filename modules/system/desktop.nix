@@ -166,7 +166,7 @@
 
     home.file.".config/qt6ct/qt6ct.conf".text = ''
       [Appearance]
-      icon_theme=Papirus-Light
+      icon_theme=Papirus-Dark
       style=Fusion
       custom_palette=true
       color_scheme_path=/home/sboynton/.config/qt6ct/colors/catppuccin-mocha.conf
