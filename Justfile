@@ -1,8 +1,5 @@
 host := `hostname`
 
-# WSLg overlays /run/user/1000 with a noexec tmpfs, which breaks shebang recipes.
-export XDG_RUNTIME_DIR := "/tmp"
-
 boot:
     NIXPKGS_ALLOW_UNFREE=1 nh os boot --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
 
@@ -18,18 +15,21 @@ diff:
 update:
     nix flake update
 
+# Non-shebang to avoid WSLg's noexec /run/user/$UID overlay, where just writes
+# shebang recipes and fails to execve them.
 upgrade:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    [[ -n "${GITHUB_TOKEN:-}" ]] && export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"
-    just bump-pkgs
-    just update
-    git --no-pager diff
-    read -rp "Continue with switch? [y/N] " ans
-    [[ "$ans" == [yY]* ]] || exit 0
-    just deploy
-    git add flake.lock pkgs/
-    git commit -m "Upgrade flake inputs and packages" || true
+    @bash -c '\
+      set -euo pipefail; \
+      [[ -n "${GITHUB_TOKEN:-}" ]] && export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"; \
+      just bump-pkgs; \
+      just update; \
+      git --no-pager diff; \
+      read -rp "Continue with switch? [y/N] " ans; \
+      [[ "$ans" == [yY]* ]] || exit 0; \
+      just deploy; \
+      git add flake.lock pkgs/; \
+      git commit -m "Upgrade flake inputs and packages" || true \
+    '
 
 bump-pkgs:
     for p in pkgs/*/; do \
