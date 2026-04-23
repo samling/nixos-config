@@ -1,5 +1,9 @@
 {
   flake.modules.homeManager.base = { pkgs, ... }: {
+    home.file.".config/k9s" = {
+      source = ../../config/k9s;
+      recursive = true;
+    };
     home.packages = with pkgs; [
       k9s
       krew
