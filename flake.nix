@@ -14,7 +14,8 @@
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
-    claude-code.url = "github:sadjow/claude-code-nix";
+    llm-agents.url = "github:numtide/llm-agents.nix";
+    #claude-code.url = "github:sadjow/claude-code-nix";
     asus-fan.url = "github:ThatOneCalculator/asus-5606-fan-state";
     matugen.url = "github:/InioX/Matugen";
     nixos-wsl = {

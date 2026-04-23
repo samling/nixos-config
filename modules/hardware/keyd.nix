@@ -8,7 +8,7 @@ in
       enable = true;
       keyboards.default = {
         ids = [ "*" ];
-        settings.main.capslock = "overload(control, esc)";
+        settings.main.capslock = "leftcontrol";
         settings.main."f23+leftshift+leftmeta" = "M-A-c";
         extraConfig = ''
           [control+alt]
