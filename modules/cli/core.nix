@@ -18,6 +18,7 @@
       jq
       just
       killall
+      kmod
       libnotify
       littlesnitch
       lsof
