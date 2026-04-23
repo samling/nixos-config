@@ -7,4 +7,6 @@ cat | jq --arg home "$HOME" '
   }
   | .sandbox.seccomp.bpfPath   = "\($home)/.local/share/claude-code/seccomp/x64/seccomp-unix-block.bpf"
   | .sandbox.seccomp.applyPath = "\($home)/.local/share/claude-code/seccomp/x64/apply-seccomp"
+  | .sandbox.enabled = true
+  | .sandbox.autoAllowBashIfSandboxed = true
 '

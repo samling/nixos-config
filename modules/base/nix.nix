@@ -9,7 +9,6 @@
 
     nixpkgs.config.allowUnfree = true;
     nixpkgs.overlays = [
-      inputs.claude-code.overlays.default
       (final: prev: inputs.self.packages.${prev.stdenv.hostPlatform.system} or {})
     ];
   };
