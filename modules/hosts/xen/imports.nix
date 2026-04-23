@@ -8,6 +8,7 @@
       games
       laptop
       tailscale
+      virtualization
     ]);
   };
 }
