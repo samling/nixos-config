@@ -35,7 +35,7 @@ A full path from a blank NixOS install to a daily-driver machine.
     mkdir -p modules/hosts/<hostname>
     sudo nixos-generate-config --show-hardware-config > modules/hosts/<hostname>/hardware-configuration.nix
     ```
-6. Write `modules/hosts/<hostname>/default.nix` and register the host in `flake.nix`. See [NIX.md → Adding a host](./NIX.md#adding-a-host).
+6. Write the host files under `modules/hosts/<hostname>/` (imports, hostname, platform, boot, state-version, any per-host overrides). `flake.nixosConfigurations.<hostname>` is auto-derived from `configurations.nixos.<hostname>` — no `flake.nix` edit needed. See [NIX.md → Adding a host](./NIX.md#adding-a-host).
 7. Stage everything (nix ignores untracked files):
     ```bash
     git add -A

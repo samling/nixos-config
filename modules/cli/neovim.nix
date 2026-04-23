@@ -20,6 +20,10 @@
       isort
       shfmt
       stylua
+
+      # Plugins
+      typst
+      mermaid-cli
     ];
 
     home.file.".config/nvim" = {
