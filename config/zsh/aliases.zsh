@@ -12,7 +12,7 @@ alias diff="delta"
 #alias grep="rg"
 #alias grepall="rg -uuu --no-ignore"
 alias journalctl="SYSTEMD_LESS=FRXMK journalctl --no-pager"
-alias top="htop"
+alias top="btop -u 10"
 alias watch="viddy -d"
 #alias vi=nvim-maybe-profile
 #alias vim=nvim-maybe-profile
