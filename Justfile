@@ -33,8 +33,13 @@ upgrade:
     '
 
 bump-pkgs:
+    blacklist="pkgs/.skip-update"; \
     for p in pkgs/*/; do \
       name=$(basename "$p"); \
+      if [ -f "$blacklist" ] && grep -qxF "$name" "$blacklist"; then \
+        echo "==> $name (skipped: in $blacklist)"; \
+        continue; \
+      fi; \
       echo "==> $name"; \
       if [ -x "$p/update.sh" ]; then \
         "$p/update.sh"; \

@@ -2,11 +2,11 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "littlesnitch";
-  version = "1.0.3-1";
+  version = "1.0.4-1";
 
   src = fetchurl {
     url = "https://obdev.at/downloads/littlesnitch-linux/littlesnitch-${finalAttrs.version}-x86_64.pkg.tar.zst";
-    hash = "sha256-ZmR7GSZobRA0uTMH5hfqxW+L2EOYefpjrOgOCWQYaG0=";
+    hash = "sha256-MQTnOFnC5yuIIG6/Ln4jmhV+0VTrEvOXL7VwKF1Srsk=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook zstd ];

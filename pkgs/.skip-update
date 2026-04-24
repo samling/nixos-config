@@ -1,0 +1,7 @@
+# Packages that `just bump-pkgs` should leave alone.
+# One package name (directory basename under pkgs/) per line. `#` for comments.
+# Remove an entry here to re-enable auto-bumps on the next `just upgrade`.
+
+# v0.2.2 introduced a failing layout test upstream; pinned to 0.2.1 until fixed.
+# https://github.com/1jehuang/mermaid-rs-renderer
+mermaid-rs-renderer
