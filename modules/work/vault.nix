@@ -1,8 +1,7 @@
 {
-  flake.modules.homeManager.work = { pkgs, ... }: {
+  flake.modules.homeManager.work = { pkgs, lib, ... }: {
     home.packages = with pkgs; [
-      nvault
       vault-bin
-    ];
+    ] ++ lib.optional (pkgs ? nvault) pkgs.nvault;
   };
 }
