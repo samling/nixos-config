@@ -1,15 +1,13 @@
 { config, ... }:
 let
-  inherit (config.flake.meta) owner;
+  inherit (config.flake.meta) owner dotfilesPath;
 in
 {
-  flake.modules.homeManager.desktop = { pkgs, ... }: {
+  flake.modules.homeManager.desktop = { pkgs, config, ... }: {
     home.packages = with pkgs; [ quickshell ];
 
-    home.file.".config/quickshell" = {
-      source = ../../config/quickshell;
-      recursive = true;
-    };
+    home.file.".config/quickshell".source =
+      config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/config/quickshell";
 
     systemd.user.services.quickshell = {
       Unit = {
