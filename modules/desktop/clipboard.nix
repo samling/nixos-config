@@ -6,10 +6,15 @@
     home.packages = with pkgs; [
       clipse
       clipse-gui
-      copyq
+      # copyq
       wl-clipboard
       wtype
     ];
+
+    home.file.".config/clipse" = {
+      source = ../../config/clipse;
+      recursive = true;
+    };
 
     systemd.user.services = {
       wl-paste-primary = {
@@ -25,35 +30,52 @@
         Install.WantedBy = [ "graphical-session.target" ];
       };
 
-      clipse = {
+      # clipse's `-listen` just spawns two `wl-paste --watch clipse -wl-store`
+      # processes as detached children and exits, which Type=simple can't
+      # supervise. We run those watchers directly so each one is a real
+      # foregrounded systemd-managed process with proper restart semantics.
+      clipse-watch-text = {
         Unit = {
-          Description = "clipse clipboard history daemon";
+          Description = "clipse text clipboard watcher";
           PartOf = [ "graphical-session.target" ];
           After = [ "graphical-session.target" ];
         };
         Service = {
-          ExecStart = "${pkgs.clipse}/bin/clipse -listen-shell";
+          ExecStart = "${pkgs.wl-clipboard}/bin/wl-paste -t text --watch ${pkgs.clipse}/bin/clipse -wl-store";
           Restart = "on-failure";
         };
         Install.WantedBy = [ "graphical-session.target" ];
       };
 
-      copyq = {
+      clipse-watch-image = {
         Unit = {
-          # Running copyq alongside wl-paste/clipse stabilises clipboard
-          # handoff between wayland clients (observed: other managers hang
-          # on write without copyq present).
-          Description = "CopyQ clipboard server";
+          Description = "clipse image clipboard watcher";
           PartOf = [ "graphical-session.target" ];
           After = [ "graphical-session.target" ];
         };
         Service = {
-          Environment = "QT_QPA_PLATFORM=xcb";
-          ExecStart = "${pkgs.copyq}/bin/copyq --start-server";
+          ExecStart = "${pkgs.wl-clipboard}/bin/wl-paste -t image/png --watch ${pkgs.clipse}/bin/clipse -wl-store";
           Restart = "on-failure";
         };
         Install.WantedBy = [ "graphical-session.target" ];
       };
+
+      # copyq = {
+      #   Unit = {
+      #     # Running copyq alongside wl-paste/clipse stabilises clipboard
+      #     # handoff between wayland clients (observed: other managers hang
+      #     # on write without copyq present).
+      #     Description = "CopyQ clipboard server";
+      #     PartOf = [ "graphical-session.target" ];
+      #     After = [ "graphical-session.target" ];
+      #   };
+      #   Service = {
+      #     Environment = "QT_QPA_PLATFORM=xcb";
+      #     ExecStart = "${pkgs.copyq}/bin/copyq --start-server";
+      #     Restart = "on-failure";
+      #   };
+      #   Install.WantedBy = [ "graphical-session.target" ];
+      # };
     };
   };
 }
