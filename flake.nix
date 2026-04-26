@@ -25,6 +25,9 @@
     #   url = "github:H3rmt/hyprshell?ref=hyprshell-release";
     #   inputs.hyprland.follows = "hyprland";
     # };
+    # ghostty's flake pins its own nixpkgs to control the glibc version
+    # and Zig/GTK pairing — don't `follows`. Main is the `tip` channel.
+    ghostty.url = "github:ghostty-org/ghostty";
     llm-agents.url = "github:numtide/llm-agents.nix";
     #claude-code.url = "github:sadjow/claude-code-nix";
     asus-fan.url = "github:ThatOneCalculator/asus-5606-fan-state";

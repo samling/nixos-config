@@ -22,9 +22,12 @@ Scope {
                 implicitHeight: Config.barHeight
                 color: "transparent"
                 
-                // Layer configuration for proper popup handling
+                // Layer configuration for proper popup handling.
+                // Top (not Bottom) so niri renders the bar once instead
+                // of once per workspace — otherwise the bar animates
+                // along with workspace switches.
                 WlrLayershell.namespace: "quickshell:bar"
-                WlrLayershell.layer: WlrLayer.Bottom
+                WlrLayershell.layer: WlrLayer.Top
                 exclusiveZone: Config.barHeight
                 
                 anchors {

@@ -15,4 +15,10 @@
       package = inputs.niri-flake.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
     };
   };
+  flake.modules.homeManager.desktop = { pkgs, ...}: {
+    programs.swaylock.package = pkgs.swaylock-effects;
+    home.packages = with pkgs; [
+      swaylock
+    ];
+  };
 }

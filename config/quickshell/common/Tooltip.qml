@@ -58,7 +58,14 @@ Item {
         
         WlrLayershell.namespace: "quickshell:tooltip"
         WlrLayershell.layer: WlrLayer.Overlay
-        
+
+        // Without a mask, the full-screen overlay catches cursor input
+        // across the whole screen — that steals hover from the bar
+        // widget that triggered the tooltip and causes it to flicker on
+        // and off. Restricting input to just the tooltip rectangle lets
+        // cursor events pass through the transparent surround.
+        mask: Region { item: tooltipContent }
+
         Rectangle {
             id: tooltipContent
             

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.common
+import qs.services
 
 Item {
     id: root
@@ -35,16 +36,32 @@ Item {
             }
         }
 
+        // Under niri, the workspaces widget moves to the left side bar,
+        // so this pill collapses entirely.
         BarGroup {
             id: workspacesGroup
             accentColor: Config.pillColor2
             Layout.fillHeight: true
+            visible: !Compositor.isNiri
 
             Workspaces {
                 id: workspacesWidget
                 activeColor: workspacesGroup.textColor
                 activeSecondaryColor: workspacesGroup.textColor
                 inactiveColor: Qt.darker(workspacesGroup.textColor, 1.4)
+            }
+        }
+
+        BarGroup {
+            id: columnsGroup
+            accentColor: Config.pillColor3
+            Layout.fillHeight: true
+            visible: Compositor.isNiri && Compositor.columns.length > 0
+
+            ColumnStrip {
+                id: columnStripWidget
+                activeColor: columnsGroup.textColor
+                inactiveColor: Qt.darker(columnsGroup.textColor, 1.6)
             }
         }
     }
