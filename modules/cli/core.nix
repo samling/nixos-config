@@ -5,6 +5,7 @@
       bc
       btop
       chezmoi
+      cmake
       cmatrix
       duf
       eza
@@ -26,16 +27,20 @@
       psmisc
       ranger
       read-edid
+      rhash
       ripgrep
       toofan
       tree
       ts
+      unixodbc
       unzip
       v4l-utils
       viddy
       watch
       wget
+      xxHash
       yq
+      zip
       zoxide
     ];
   };

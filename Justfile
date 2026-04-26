@@ -51,4 +51,4 @@ bump-pkgs:
     done
 
 clean:
-  nh clean all -k10
+  nh clean all -k20
