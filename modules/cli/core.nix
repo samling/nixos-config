@@ -38,7 +38,7 @@
       viddy
       watch
       wget
-      xxHash
+      xxhash
       yq
       zip
       zoxide

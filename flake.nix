@@ -10,8 +10,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland/v0.54.3";
+    # hyprland-plugins has no version tags and its main branch tracks
+    # hyprland-git. Pin to a commit known to build against the hyprland tag
+    # above, and bump deliberately when bumping hyprland.
     hyprland-plugins = {
-      url = "github:hyprwm/hyprland-plugins";
+      url = "github:hyprwm/hyprland-plugins/6acc0738f298f5efe40a99db2c12449112d65633";
       inputs.hyprland.follows = "hyprland";
     };
     # hyprshell = {
