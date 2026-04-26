@@ -14,10 +14,10 @@
       url = "github:hyprwm/hyprland-plugins";
       inputs.hyprland.follows = "hyprland";
     };
-    hyprshell = {
-      url = "github:H3rmt/hyprshell?ref=hyprshell-release";
-      inputs.hyprland.follows = "hyprland";
-    };
+    # hyprshell = {
+    #   url = "github:H3rmt/hyprshell?ref=hyprshell-release";
+    #   inputs.hyprland.follows = "hyprland";
+    # };
     llm-agents.url = "github:numtide/llm-agents.nix";
     #claude-code.url = "github:sadjow/claude-code-nix";
     asus-fan.url = "github:ThatOneCalculator/asus-5606-fan-state";
