@@ -10,6 +10,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland/v0.54.3";
+    # niri-flake README recommends NOT following nixpkgs — its pinned
+    # nixpkgs is what niri-unstable is tested against. The flake enables
+    # niri.cachix.org by default so the duplicated nixpkgs is cached.
+    niri-flake.url = "github:sodiboo/niri-flake";
     # hyprland-plugins has no version tags and its main branch tracks
     # hyprland-git. Pin to a commit known to build against the hyprland tag
     # above, and bump deliberately when bumping hyprland.
