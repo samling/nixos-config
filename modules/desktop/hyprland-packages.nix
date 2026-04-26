@@ -7,7 +7,6 @@
       hypridle
       hyprlock
       hyprpolkitagent
-      hyprshell
     ];
 
     home.file.".config/hypr" = {

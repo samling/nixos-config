@@ -49,3 +49,6 @@ bump-pkgs:
           || true; \
       fi; \
     done
+
+clean:
+  nh clean all -k10
