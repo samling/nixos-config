@@ -5,7 +5,6 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import qs.common
 import qs.services
@@ -13,6 +12,8 @@ import qs.osd
 
 Item {
     id: root
+
+    readonly property int panelWidth: 388
 
     property var cpuIndicator
     property var memIndicator
@@ -54,27 +55,24 @@ Item {
         visible: root.panelOpen || slideAnim.running
 
         WlrLayershell.namespace: "quickshell:infopanel"
-        WlrLayershell.layer: root.panelOpen || slideAnim.running ? WlrLayer.Top : WlrLayer.Background
+        WlrLayershell.layer: WlrLayer.Top
         exclusiveZone: 0
 
         anchors {
             top: true
             right: true
             bottom: true
+            left: true
         }
 
-        margins.top: 4
-        margins.right: 4
-        margins.bottom: 4
-
-        implicitWidth: 388
         color: "transparent"
 
-        HyprlandFocusGrab {
-            id: focusGrab
-            active: root.panelOpen
-            windows: [panelWindow]
-            onCleared: GlobalStates.sidebarRightOpen = false
+        // Click-catcher: outside-click dismissal. Lives below the panel in
+        // z-order so panel content receives its own clicks first.
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onPressed: GlobalStates.sidebarRightOpen = false
         }
 
         // The panel
@@ -83,13 +81,22 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.right: parent.right
-            anchors.rightMargin: root.panelOpen ? 0 : -width - 20
-            width: parent.width
+            anchors.topMargin: 4
+            anchors.bottomMargin: 4
+            anchors.rightMargin: root.panelOpen ? 4 : -width - 20
+            width: root.panelWidth
             color: Config.getColor("background.secondary")
             border.width: 1
             border.color: Config.getColor("border.subtle")
             radius: 12
             clip: true
+
+            // Absorb clicks on bare panel areas so they don't fall through to
+            // the outside-click catcher behind us.
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.AllButtons
+            }
 
             Behavior on anchors.rightMargin {
                 NumberAnimation {
@@ -130,7 +137,7 @@ Item {
                             text: "\uf0e4"
                             font.pixelSize: Config.fontSizeHeader
                             font.family: Config.fontFamilyIcon
-                            color: Config.getColor("primary.mauve")
+                            color: Config.getColor("text.primary")
                         }
 
                         Text {
@@ -208,12 +215,12 @@ Item {
                             Text {
                                 text: "🔔\uFE0E"
                                 font.pixelSize: Config.fontSizeMedium
-                                color: Config.getColor("primary.mauve")
+                                color: Config.getColor("text.primary")
                             }
 
                             Text {
                                 text: "Notifications"
-                                color: Config.getColor("text.secondary")
+                                color: Config.getColor("text.primary")
                                 font.pixelSize: Config.fontSizeMedium
                                 font.weight: Font.DemiBold
                                 font.family: Config.fontFamilyMonospace
@@ -651,7 +658,7 @@ Item {
                                             // Body text
                                             Text {
                                                 text: notifRow.modelData?.body ?? ""
-                                                color: Config.getColor("text.secondary")
+                                                color: Config.getColor("text.primary")
                                                 font.pixelSize: Config.fontSizeBase
                                                 font.family: Config.fontFamilyMonospace
                                                 wrapMode: Text.WordWrap
@@ -813,7 +820,7 @@ Item {
                                 Layout.fillWidth: true
                                 height: 6
                                 radius: 3
-                                color: Config.getColor("background.secondary")
+                                color: Config.getColor("background.crust")
 
                                 Rectangle {
                                     width: parent.width * (Brightness.brightnessPercent / 100)
@@ -876,7 +883,7 @@ Item {
                                 Layout.fillWidth: true
                                 height: 6
                                 radius: 3
-                                color: Config.getColor("background.secondary")
+                                color: Config.getColor("background.crust")
 
                                 Rectangle {
                                     width: parent.width * Math.min(Volume.percentage, 1.0)
@@ -1101,12 +1108,12 @@ Item {
                                 text: "\uf2db"
                                 font.pixelSize: Config.fontSizeMedium
                                 font.family: Config.fontFamilyIcon
-                                color: Config.getColor("primary.mauve")
+                                color: Config.getColor("text.primary")
                             }
 
                             Text {
                                 text: "CPU"
-                                color: Config.getColor("text.secondary")
+                                color: Config.getColor("text.primary")
                                 font.pixelSize: Config.fontSizeMedium
                                 font.weight: Font.DemiBold
                                 font.family: Config.fontFamilyMonospace
@@ -1190,13 +1197,14 @@ Item {
                                     model: root.cpuIndicator ? root.cpuIndicator.powerProfileModes : []
 
                                     Rectangle {
+                                        id: profileBtn
                                         required property var modelData
                                         property bool isActive: root.cpuIndicator && root.cpuIndicator.powerProfile === modelData.value
                                         width: (systemSection.width - 24 - 8) / 3
                                         height: 32
                                         radius: 6
                                         color: isActive
-                                            ? Qt.rgba(Config.getColor("primary.mauve").r, Config.getColor("primary.mauve").g, Config.getColor("primary.mauve").b, 0.2)
+                                            ? Qt.rgba(Config.getColor("text.primary").r, Config.getColor("text.primary").g, Config.getColor("text.primary").b, 0.18)
                                             : profileMouse.containsMouse
                                                 ? Config.getColor("background.surface")
                                                 : Config.getColor("background.tertiary")
@@ -1210,22 +1218,20 @@ Item {
                                             spacing: 4
 
                                             Text {
-                                                text: modelData.icon
+                                                text: profileBtn.modelData.icon
                                                 font.pixelSize: Config.fontSizeBase
                                                 font.family: Config.fontFamilyIcon
-                                                color: parent.parent.isActive
-                                                    ? Config.getColor("primary.mauve")
+                                                color: profileBtn.isActive
+                                                    ? Config.getColor("text.primary")
                                                     : Config.getColor("text.secondary")
                                             }
 
                                             Text {
-                                                text: modelData.label
+                                                text: profileBtn.modelData.label
                                                 font.pixelSize: Config.fontSizeSmall
-                                                font.weight: parent.parent.isActive ? Font.Bold : Font.Medium
+                                                font.weight: profileBtn.isActive ? Font.Bold : Font.Medium
                                                 font.family: Config.fontFamilyMonospace
-                                                color: parent.parent.isActive
-                                                    ? Config.getColor("primary.mauve")
-                                                    : Config.getColor("text.primary")
+                                                color: Config.getColor("text.primary")
                                             }
                                         }
 
@@ -1262,13 +1268,14 @@ Item {
                                     model: root.cpuIndicator ? root.cpuIndicator.fanModes : []
 
                                     Rectangle {
+                                        id: fanBtn
                                         required property var modelData
                                         property bool isActive: root.cpuIndicator && root.cpuIndicator.fanState.toLowerCase().indexOf(modelData.label.toLowerCase()) !== -1
                                         width: (systemSection.width - 24 - 12) / 4
                                         height: 32
                                         radius: 6
                                         color: isActive
-                                            ? Qt.rgba(Config.getColor("primary.mauve").r, Config.getColor("primary.mauve").g, Config.getColor("primary.mauve").b, 0.2)
+                                            ? Qt.rgba(Config.getColor("text.primary").r, Config.getColor("text.primary").g, Config.getColor("text.primary").b, 0.18)
                                             : fanMouse.containsMouse
                                                 ? Config.getColor("background.surface")
                                                 : Config.getColor("background.tertiary")
@@ -1282,24 +1289,22 @@ Item {
                                             spacing: 1
 
                                             Text {
-                                                text: modelData.icon
+                                                text: fanBtn.modelData.icon
                                                 font.pixelSize: Config.fontSizeBase
                                                 font.family: Config.fontFamilyIcon
                                                 Layout.alignment: Qt.AlignHCenter
-                                                color: parent.parent.isActive
-                                                    ? Config.getColor("primary.mauve")
+                                                color: fanBtn.isActive
+                                                    ? Config.getColor("text.primary")
                                                     : Config.getColor("text.secondary")
                                             }
 
                                             Text {
-                                                text: modelData.label
+                                                text: fanBtn.modelData.label
                                                 font.pixelSize: 9
-                                                font.weight: parent.parent.isActive ? Font.Bold : Font.Medium
+                                                font.weight: fanBtn.isActive ? Font.Bold : Font.Medium
                                                 font.family: Config.fontFamilyMonospace
                                                 Layout.alignment: Qt.AlignHCenter
-                                                color: parent.parent.isActive
-                                                    ? Config.getColor("primary.mauve")
-                                                    : Config.getColor("text.primary")
+                                                color: Config.getColor("text.primary")
                                             }
                                         }
 
@@ -1333,12 +1338,12 @@ Item {
                                 text: "󰘚"
                                 font.pixelSize: Config.fontSizeMedium
                                 font.family: Config.fontFamilyIcon
-                                color: Config.getColor("primary.mauve")
+                                color: Config.getColor("text.primary")
                             }
 
                             Text {
                                 text: "Memory"
-                                color: Config.getColor("text.secondary")
+                                color: Config.getColor("text.primary")
                                 font.pixelSize: Config.fontSizeMedium
                                 font.weight: Font.DemiBold
                                 font.family: Config.fontFamilyMonospace
@@ -1419,12 +1424,12 @@ Item {
                                 text: "\uf0a0"
                                 font.pixelSize: Config.fontSizeMedium
                                 font.family: Config.fontFamilyIcon
-                                color: Config.getColor("primary.mauve")
+                                color: Config.getColor("text.primary")
                             }
 
                             Text {
                                 text: "Disk (" + (root.diskIndicator ? root.diskIndicator.mountPoint : "/") + ")"
-                                color: Config.getColor("text.secondary")
+                                color: Config.getColor("text.primary")
                                 font.pixelSize: Config.fontSizeMedium
                                 font.weight: Font.DemiBold
                                 font.family: Config.fontFamilyMonospace
@@ -1498,7 +1503,9 @@ Item {
                                 width: parent.width
                                 height: 16
                                 radius: 4
-                                color: Config.getColor("background.secondary")
+                                color: Config.getColor("background.crust")
+                                border.width: 1
+                                border.color: Config.getColor("primary.mauve")
                                 clip: true
 
                                 Rectangle {

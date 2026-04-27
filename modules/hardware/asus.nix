@@ -34,6 +34,9 @@ in
       ];
     };
     boot.kernelParams = [ "drm.edid_firmware=eDP-1:edid/edid_mclk_fix.bin" ];
+    boot.extraModprobeConfig = ''
+      options asus_wmi fnlock_default=N
+    '';
   };
 
   flake.modules.homeManager.laptop = { pkgs, ... }: {

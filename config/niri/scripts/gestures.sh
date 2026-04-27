@@ -14,16 +14,16 @@ show_indicator() {
 case "$class" in
   google-chrome*|chromium*)
     case "$gesture" in
-      pinchin)  wtype -M ctrl -k t -m ctrl ;;  # close tab
-      pinchout) wtype -M ctrl -k w -m ctrl ;;  # new tab
+      pinchin)  wtype -M ctrl -k w -m ctrl ;;  # close tab
+      pinchout) wtype -M ctrl -k t -m ctrl ;;  # new tab
       left) show_indicator right; wtype -M alt -k Right -m alt ;; # forward
       right) show_indicator left; wtype -M alt -k Left -m alt ;; # back
     esac
     ;;
   firefox*)
     case "$gesture" in
-      pinchin)  wtype -M ctrl -k t -m ctrl ;;
-      pinchout) wtype -M ctrl -k w -m ctrl ;;
+      pinchin)  wtype -M ctrl -k w -m ctrl ;;
+      pinchout) wtype -M ctrl -k t -m ctrl ;;
       left) show_indicator right; wtype -M alt -k Right -m alt ;; # forward
       right) show_indicator left; wtype -M alt -k Left -m alt ;; # back
     esac
