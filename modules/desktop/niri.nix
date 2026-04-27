@@ -1,4 +1,7 @@
-{ inputs, ... }:
+{ config, inputs, ... }:
+  let
+    inherit (config.flake.meta) dotfilesPath;
+  in
 {
   # niri-flake's NixOS module injects `homeModules.config` into
   # `home-manager.sharedModules`, so `programs.niri.settings` is already
@@ -15,10 +18,30 @@
       package = inputs.niri-flake.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
     };
   };
-  flake.modules.homeManager.desktop = { pkgs, ...}: {
+
+  flake.modules.homeManager.desktop = { config, pkgs, ...}: {
     programs.swaylock.package = pkgs.swaylock-effects;
     home.packages = with pkgs; [
       swaylock
+      libinput-gestures
     ];
+    xdg.configFile."niri/config.kdl".source =
+      config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/config/niri/config.kdl";
+    xdg.configFile."libinput-gestures.conf".source =
+      config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/config/niri/libinput-gestures.conf";
+
+    systemd.user.services.libinput-gestures = {
+      Unit = {
+        Description = "libinput-gestures";
+        After = [ "graphical-session.target" ];
+        PartOf = [ "graphical-session.target" ];
+      };
+      Service = {
+        ExecStart = "${pkgs.libinput-gestures}/bin/libinput-gestures";
+        Restart = "always";
+        RestartSec = "5s";
+      };
+      Install.WantedBy = [ "graphical-session.target" ];
+    };
   };
 }
