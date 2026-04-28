@@ -281,13 +281,14 @@ spawn-at-startup "ghostty"
 spawn-at-startup "code"
 spawn-at-startup "vesktop"
 spawn-at-startup "obsidian"
+spawn-sh-at-startup	"killall niri-float-sticky; niri-float-sticky -disable-auto-stick"
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
 hotkey-overlay {
     // Uncomment this line to disable the "Important Hotkeys" pop-up at startup.
-    // skip-at-startup
+    skip-at-startup
 }
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
@@ -339,11 +340,14 @@ window-rule {
 window-rule {
   match app-id=r#"^com\.mitchellh\.ghostty$"#
   open-on-workspace "2:Terminal"
+  draw-border-with-background false;
 }
 
 window-rule {
-  match app-id=r#"^com\.mitchellh\.ghostty$"#
-  draw-border-with-background false;
+  match app-id=r#"^chrome-.*"#
+  open-floating true;
+  open-focused true;
+  default-floating-position x=32 y=150 relative-to="top-right"
 }
 
 window-rule {
@@ -377,6 +381,12 @@ window-rule {
     // - host Firefox (app-id is "firefox")
     // - Flatpak Firefox (app-id is "org.mozilla.firefox")
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
+    open-floating true
+}
+
+// Open the Chrome picture-in-picture player as floating by default.
+window-rule {
+    match app-id="" title="^Picture in picture"
     open-floating true
 }
 
@@ -684,4 +694,7 @@ binds {
     // Powers off the monitors. To turn them back on, do any input like
     // moving the mouse or pressing any other key.
     // Mod+Shift+P { power-off-monitors; }
+
+    // Pin a floating window (requires niri-float-sticky)
+    Mod+Shift+P { spawn "niri-float-sticky" "-ipc" "toggle_sticky"; }
 }
