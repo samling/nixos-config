@@ -17,11 +17,14 @@ Rectangle {
 
     height: 56
     radius: 8
-    color: root.active
-        ? Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.2)
-        : toggleMouse.containsMouse
-            ? Config.getColor("background.tertiary")
-            : Config.getColor("background.secondary")
+    color: {
+        const fg = Config.getColor("text.primary")
+        if (root.active)
+            return Qt.rgba(fg.r, fg.g, fg.b, toggleMouse.containsMouse ? 0.28 : 0.18)
+        if (toggleMouse.containsMouse)
+            return Qt.rgba(fg.r, fg.g, fg.b, 0.10)
+        return Config.getColor("background.tertiary")
+    }
     border.width: root.active ? 1 : 0
     border.color: root.accentColor
 
@@ -38,7 +41,9 @@ Rectangle {
             text: root.icon
             font.pixelSize: root.iconSize
             font.family: Config.fontFamilyIcon
-            color: root.active ? root.accentColor : Config.getColor("text.secondary")
+            color: root.active || toggleMouse.containsMouse
+                ? Config.getColor("text.primary")
+                : Config.getColor("text.muted")
 
             Behavior on color { ColorAnimation { duration: 100 } }
         }
@@ -53,7 +58,9 @@ Rectangle {
                 font.pixelSize: Config.fontSizeSmall
                 font.weight: root.active ? Font.Bold : Font.Medium
                 font.family: Config.fontFamilyMonospace
-                color: root.active ? Config.getColor("text.primary") : Config.getColor("text.secondary")
+                color: root.active || toggleMouse.containsMouse
+                    ? Config.getColor("text.primary")
+                    : Config.getColor("text.muted")
                 elide: Text.ElideRight
                 width: parent.width
 

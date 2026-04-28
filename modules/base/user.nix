@@ -7,7 +7,7 @@ in
     users.users.${owner.username} = {
       isNormalUser = true;
       inherit (owner) description;
-      extraGroups = [ "networkmanager" "wheel" ];
+      extraGroups = [ "networkmanager" "wheel" "input" ];
       shell = pkgs.zsh;
     };
   };

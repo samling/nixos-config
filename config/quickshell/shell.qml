@@ -9,6 +9,7 @@ import Quickshell.Io
 
 ShellRoot {
 	LazyLoader { active: true; component: Bar {} }
+	LazyLoader { active: true; component: SideBar {} }
 	LazyLoader { active: true; component: VolumeOsd { id: volumeOsd } }
 	LazyLoader { active: true; component: BrightnessOsd { id: brightnessOsd } }
 	LazyLoader { active: true; component: NotificationPopup { id: notificationPopup } }

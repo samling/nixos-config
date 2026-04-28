@@ -1,116 +1,108 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Wayland
-import Quickshell.Hyprland
-
 import qs.common
+import qs.services
 
 Item {
     id: root
 
-    // Theme colors
     property color activeColor: Config.barTextColor
     property color activeSecondaryColor: Config.barTextColor
     property color inactiveColor: Qt.darker(Config.barTextColor, 1.4)
+    property color urgentColor: Config.stateOrangeColor
 
-    // All occupied workspace IDs
-    property var occupiedWorkspaces: []
+    // Niri's workspace axis is vertical; render the column accordingly.
+    // Hyprland workspaces are flat numbered → horizontal row.
+    readonly property bool vertical: Compositor.isNiri
 
-    // Determine which monitor owns a workspace (for coloring)
-    function getActiveMonitorIndex(workspaceId) {
-        for (let i = 0; i < Hyprland.monitors.values.length; i++) {
-            let mon = Hyprland.monitors.values[i]
-            if (mon && mon.activeWorkspace && mon.activeWorkspace.id === workspaceId) {
-                return i
-            }
-        }
+    function activeMonitorIndex(workspaceId) {
+        const mons = Compositor.monitors
+        for (let i = 0; i < mons.length; ++i)
+            if (mons[i].focusedWorkspaceId === workspaceId) return i
         return -1
     }
 
-    function updateWorkspaces() {
-        root.occupiedWorkspaces = Hyprland.workspaces.values
-            .map(ws => ws.id)
-            .filter(id => id > 0)
-            .sort((a, b) => a - b)
-    }
+    implicitWidth: vertical
+        ? loaderItem.implicitWidth
+        : loaderItem.implicitWidth + 8
+    implicitHeight: vertical
+        ? loaderItem.implicitHeight + 4
+        : (parent ? parent.height : Config.barHeight)
 
-    implicitWidth: workspaceRow.implicitWidth + 8
-    implicitHeight: parent ? parent.height : Config.barHeight
-
-    RowLayout {
-        id: workspaceRow
+    Item {
+        id: loaderItem
         anchors.centerIn: parent
-        spacing: 8
+        implicitWidth: root.vertical
+            ? (vertCol.visible ? vertCol.implicitWidth : 0)
+            : (horizRow.visible ? horizRow.implicitWidth : 0)
+        implicitHeight: root.vertical
+            ? (vertCol.visible ? vertCol.implicitHeight : 0)
+            : (horizRow.visible ? horizRow.implicitHeight : 0)
 
-        Repeater {
-            model: root.occupiedWorkspaces
+        ColumnLayout {
+            id: vertCol
+            anchors.centerIn: parent
+            visible: root.vertical
+            spacing: 0
 
-            Text {
-                id: wsLabel
-                required property int modelData
-                readonly property int workspaceId: modelData
-                readonly property int activeMonitorIdx: root.getActiveMonitorIndex(wsLabel.workspaceId)
-                readonly property bool isActive: wsLabel.activeMonitorIdx >= 0
-                readonly property bool isSecondaryMonitor: wsLabel.activeMonitorIdx > 0
-                readonly property bool isHovered: mouseArea.containsMouse
+            Repeater {
+                model: root.vertical ? Compositor.workspaces : null
+                delegate: workspaceLabel
+            }
+        }
 
-                text: wsLabel.workspaceId.toString()
-                font.pixelSize: Config.fontSizeBase
-                font.weight: wsLabel.isActive ? Font.Black : Font.Normal
-                font.family: Config.fontFamilyMonospace
+        RowLayout {
+            id: horizRow
+            anchors.centerIn: parent
+            visible: !root.vertical
+            spacing: 8
 
-                color: {
-                    if (wsLabel.isActive) {
-                        return wsLabel.isSecondaryMonitor ? root.activeSecondaryColor : root.activeColor
-                    } else if (wsLabel.isHovered) {
-                        return Qt.rgba(root.activeColor.r, root.activeColor.g, root.activeColor.b, 0.8)
-                    } else {
-                        return root.inactiveColor
-                    }
-                }
-
-                Behavior on color {
-                    ColorAnimation { duration: 150 }
-                }
-
-                MouseArea {
-                    id: mouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: {
-                        Hyprland.dispatch("workspace " + wsLabel.workspaceId)
-                    }
-                }
+            Repeater {
+                model: !root.vertical ? Compositor.workspaces : null
+                delegate: workspaceLabel
             }
         }
     }
 
-    Component.onCompleted: {
-        root.updateWorkspaces()
-    }
+    Component {
+        id: workspaceLabel
 
-    Connections {
-        target: Hyprland.workspaces
-        function onValuesChanged() {
-            root.updateWorkspaces()
-        }
-    }
+        Text {
+            id: wsLabel
+            required property var modelData
+            readonly property int activeMonIdx: root.activeMonitorIndex(modelData.id)
+            readonly property bool isActive: activeMonIdx >= 0
+            readonly property bool isSecondary: activeMonIdx > 0
+            readonly property bool isHovered: mouseArea.containsMouse
 
-    Connections {
-        target: Hyprland
-        function onFocusedWorkspaceChanged() {
-            root.updateWorkspaces()
-        }
-    }
+            text: modelData.idx.toString()
+            font.pixelSize: root.vertical ? Config.fontSizeSmall : Config.fontSizeBase
+            font.weight: wsLabel.isActive ? Font.Black : Font.Normal
+            font.family: Config.fontFamilyMonospace
+            horizontalAlignment: Text.AlignHCenter
+            Layout.alignment: Qt.AlignHCenter
+            lineHeight: root.vertical ? 1.0 : 1.0
 
-    Connections {
-        target: Hyprland.monitors
-        function onValuesChanged() {
-            root.updateWorkspaces()
+            color: {
+                if (modelData.isUrgent) return root.urgentColor
+                if (wsLabel.isActive)
+                    return wsLabel.isSecondary ? root.activeSecondaryColor : root.activeColor
+                if (wsLabel.isHovered)
+                    return Qt.rgba(root.activeColor.r, root.activeColor.g, root.activeColor.b, 0.8)
+                return root.inactiveColor
+            }
+
+            Behavior on color { ColorAnimation { duration: 150 } }
+
+            MouseArea {
+                id: mouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Compositor.focusWorkspace(wsLabel.modelData.id)
+            }
         }
     }
 }

@@ -10,6 +10,14 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland/v0.54.3";
+    # niri-flake README recommends NOT following nixpkgs — its pinned
+    # nixpkgs is what niri-unstable is tested against. The flake enables
+    # niri.cachix.org by default so the duplicated nixpkgs is cached.
+    niri-flake.url = "github:sodiboo/niri-flake";
+    niri-float-sticky = {
+      url = "github:probeldev/niri-float-sticky";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # hyprland-plugins has no version tags and its main branch tracks
     # hyprland-git. Pin to a commit known to build against the hyprland tag
     # above, and bump deliberately when bumping hyprland.
@@ -21,6 +29,9 @@
     #   url = "github:H3rmt/hyprshell?ref=hyprshell-release";
     #   inputs.hyprland.follows = "hyprland";
     # };
+    # ghostty's flake pins its own nixpkgs to control the glibc version
+    # and Zig/GTK pairing — don't `follows`. Main is the `tip` channel.
+    ghostty.url = "github:ghostty-org/ghostty";
     llm-agents.url = "github:numtide/llm-agents.nix";
     #claude-code.url = "github:sadjow/claude-code-nix";
     asus-fan.url = "github:ThatOneCalculator/asus-5606-fan-state";

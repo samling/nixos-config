@@ -238,6 +238,14 @@ QtObject {
     readonly property int barRadius: 1
     readonly property string barBackgroundColor: "transparent"
 
+    // Niri-only side bar (left edge). Asymmetric: a small left margin
+    // for breathing room from the screen edge, then the pill (sized to
+    // match horizontal pills' 24-px short axis), flush against the
+    // window on the right.
+    readonly property int sideBarLeftMargin: barContentLeftMargin
+    readonly property int sideBarPillWidth: barHeight - pillVerticalMargin * 2
+    readonly property int sideBarWidth: sideBarLeftMargin + sideBarPillWidth
+
     // Bar layout spacing
     readonly property int barContentLeftMargin: 4
     readonly property int barContentRightMargin: 4
