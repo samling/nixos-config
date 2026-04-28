@@ -346,18 +346,32 @@ Item {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     onClicked: {
-                                        // Stagger dismiss animations
-                                        for (let i = 0; i < notifList.count; i++) {
-                                            const item = notifList.itemAtIndex(i)
-                                            if (item) {
-                                                const delay = i * 50
-                                                Qt.callLater(() => {
-                                                    const t = Qt.createQmlObject(
-                                                        'import QtQuick; Timer { interval: ' + delay + '; running: true; onTriggered: { parent.dismiss(); destroy() } }',
-                                                        item
-                                                    )
-                                                })
-                                            }
+                                        // Iterate the model, not realized delegates: ListView
+                                        // virtualizes, so itemAtIndex returns null for offscreen
+                                        // rows. Animate visible rows; discard the rest directly.
+                                        const ids = Notifications.list.map(n => n.notificationId)
+                                        for (let i = 0; i < ids.length; i++) {
+                                            const notifId = ids[i]
+                                            const delay = i * 50
+                                            const timer = Qt.createQmlObject(
+                                                'import QtQuick; Timer { interval: ' + delay + '; running: true; repeat: false }',
+                                                root
+                                            )
+                                            timer.triggered.connect(function() {
+                                                let animated = false
+                                                for (let j = 0; j < notifList.count; j++) {
+                                                    const item = notifList.itemAtIndex(j)
+                                                    if (item && item.modelData && item.modelData.notificationId === notifId) {
+                                                        item.dismiss()
+                                                        animated = true
+                                                        break
+                                                    }
+                                                }
+                                                if (!animated) {
+                                                    Notifications.discardNotification(notifId)
+                                                }
+                                                timer.destroy()
+                                            })
                                         }
                                     }
                                 }
