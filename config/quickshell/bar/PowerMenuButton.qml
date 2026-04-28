@@ -39,7 +39,7 @@ Rectangle {
             text: root.icon
             font.pixelSize: Config.fontSizeIconMedium
             font.family: Config.fontFamilyIcon
-            color: mouseArea.containsMouse ? root.accentColor : Config.getColor("text.secondary")
+            color: mouseArea.containsMouse ? root.accentColor : Config.getColor("text.primary")
 
             Behavior on color {
                 ColorAnimation { duration: 100 }
@@ -52,7 +52,7 @@ Rectangle {
             font.pixelSize: Config.fontSizeBase
             font.weight: Font.Medium
             font.family: Config.fontFamilyMonospace
-            color: mouseArea.containsMouse ? root.accentColor : Config.getColor("text.secondary")
+            color: mouseArea.containsMouse ? root.accentColor : Config.getColor("text.primary")
 
             Behavior on color {
                 ColorAnimation { duration: 100 }

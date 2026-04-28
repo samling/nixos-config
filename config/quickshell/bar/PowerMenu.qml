@@ -19,7 +19,7 @@ MouseArea {
         root.menuOpen = !root.menuOpen
     }
 
-    // Arch Linux logo
+    // NixOS logo
     Text {
         id: logoText
         anchors.centerIn: parent
@@ -30,7 +30,7 @@ MouseArea {
         font.weight: Font.Bold
         font.family: Config.fontFamilyIcon
         textFormat: Text.PlainText
-        text: "\uf303"
+        text: "\uf313"
 
         Behavior on color {
             ColorAnimation { duration: Config.colorAnimationDuration }
@@ -118,7 +118,7 @@ MouseArea {
             anchors.left: parent.left
             width: 320
             height: menuContent.implicitHeight + 32
-            color: Config.getColor("background.crust")
+            color: Config.getColor("background.secondary")
             border.width: 1
             border.color: Config.getColor("border.subtle")
             radius: 12
@@ -168,7 +168,7 @@ MouseArea {
                         spacing: 12
 
                         Text {
-                            text: "\uf303"
+                            text: "\uf313"
                             font.pixelSize: Config.fontSizeIconSmall
                             font.family: Config.fontFamilyIcon
                             color: Config.getColor("primary.mauve")

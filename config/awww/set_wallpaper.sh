@@ -55,20 +55,12 @@ PRE_MTIME=$(stat -c '%y' "$TARGET" 2>/dev/null)
 PRE_HASH=$(md5sum "$TARGET" 2>/dev/null | cut -d' ' -f1)
 log "wallust starting  pre: mtime=$PRE_MTIME hash=$PRE_HASH"
 
-# kmeans fails with "Not enough colors!" on narrow-palette images (e.g. nearly
-# monochromatic sunsets). When it fails it exits non-zero and doesn't write the
-# template, leaving stale palette in place. Fall back to fastresize, which
-# tolerates low-diversity images and is also ~40x faster.
-wallust run --skip-sequences --no-hooks --quiet "$IMAGE" 2>/tmp/wallust.err
+# fastresize is ~40x faster than kmeans and tolerates low-diversity images
+# (kmeans fails with "Not enough colors!" on near-monochromatic palettes).
+wallust run --skip-sequences --no-hooks --quiet --backend fastresize "$IMAGE" 2>/tmp/wallust.err
 RC=$?
 if [ "$RC" -ne 0 ]; then
-	log "wallust kmeans failed (rc=$RC): $(cat /tmp/wallust.err | tr '\n' ' ' | head -c 200)"
-	log "retrying with backend=fastresize"
-	wallust run --skip-sequences --no-hooks --quiet --backend fastresize "$IMAGE" 2>/tmp/wallust.err
-	RC=$?
-	if [ "$RC" -ne 0 ]; then
-		log "fastresize also failed (rc=$RC): $(cat /tmp/wallust.err | tr '\n' ' ' | head -c 200)"
-	fi
+	log "wallust failed (rc=$RC): $(cat /tmp/wallust.err | tr '\n' ' ' | head -c 200)"
 fi
 "rm" -f /tmp/wallust.err
 
@@ -80,5 +72,11 @@ else
 	CHANGED="YES"
 fi
 log "wallust exit=$RC  post: mtime=$POST_MTIME hash=$POST_HASH changed=$CHANGED"
+
+if [ "$RC" -eq 0 ]; then
+	notify-send -a wallust -i "$IMAGE" "Wallust palette updated" "$(basename "$IMAGE")"
+else
+	notify-send -a wallust -u critical "Wallust failed (rc=$RC)" "$(basename "$IMAGE")"
+fi
 
 echo "Wallpaper set to: $IMAGE"
