@@ -28,10 +28,10 @@ Rectangle {
     implicitHeight: contentColumn.implicitHeight + 24 + (isPopup ? progressBar.height : 0)
     radius: 8
     color: isCritical
-        ? Qt.rgba(Config.getColor("state.error").r, Config.getColor("state.error").g, Config.getColor("state.error").b, 0.15)
+        ? Qt.tint(Config.getColor("background.surface"), Qt.rgba(Config.getColor("state.error").r, Config.getColor("state.error").g, Config.getColor("state.error").b, 0.25))
         : isLow
             ? Config.getColor("background.tertiary")
-            : Config.getColor("background.secondary")
+            : Config.getColor("background.surface")
     border.color: isCritical
         ? Config.getColor("state.error")
         : itemMouseArea.containsMouse
@@ -119,8 +119,10 @@ Rectangle {
                 Layout.preferredHeight: 28
                 radius: 6
                 color: root.isCritical
-                    ? Qt.rgba(Config.getColor("state.error").r, Config.getColor("state.error").g, Config.getColor("state.error").b, 0.3)
-                    : Config.getColor("background.tertiary")
+                    ? Qt.tint(Config.getColor("background.mantle"), Qt.rgba(Config.getColor("state.error").r, Config.getColor("state.error").g, Config.getColor("state.error").b, 0.5))
+                    : Config.getColor("background.mantle")
+                border.color: Config.getColor("border.subtle")
+                border.width: 1
                 visible: (appIconImage.status === Image.Ready) || (root.notificationObject?.appName !== "")
 
                 Image {
@@ -141,7 +143,7 @@ Rectangle {
                 Text {
                     anchors.centerIn: parent
                     text: root.notificationObject?.appName?.charAt(0)?.toUpperCase() ?? "?"
-                    color: Config.getColor("text.secondary")
+                    color: Config.getColor("text.primary")
                     font.pixelSize: Config.fontSizeMedium
                     font.weight: Font.Bold
                     font.family: Config.fontFamilyMonospace
@@ -156,7 +158,7 @@ Rectangle {
 
                 Text {
                     text: root.notificationObject?.appName ?? "Unknown"
-                    color: Config.getColor("text.secondary")
+                    color: Config.getColor("text.muted")
                     font.pixelSize: Config.fontSizeBase
                     font.weight: Font.Medium
                     font.family: Config.fontFamilyMonospace
@@ -298,7 +300,7 @@ Rectangle {
                     Text {
                         id: bodyText
                         text: root.notificationObject?.body ?? ""
-                        color: Config.getColor("text.tertiary")
+                        color: Config.getColor("text.primary")
                         font.pixelSize: Config.fontSizeMedium
                         font.family: Config.fontFamilyMonospace
                         wrapMode: Text.WordWrap
@@ -381,7 +383,7 @@ Rectangle {
                         text: parent.modelData.text || "Action"
                         color: buttonArea.containsMouse
                             ? Config.getColor("primary.lavender")
-                            : Config.getColor("text.secondary")
+                            : Config.getColor("text.primary")
                         font.pixelSize: Config.fontSizeBase
                         font.weight: Font.Medium
                         font.family: Config.fontFamilyMonospace

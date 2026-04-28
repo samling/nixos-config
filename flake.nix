@@ -14,6 +14,10 @@
     # nixpkgs is what niri-unstable is tested against. The flake enables
     # niri.cachix.org by default so the duplicated nixpkgs is cached.
     niri-flake.url = "github:sodiboo/niri-flake";
+    niri-float-sticky = {
+      url = "github:probeldev/niri-float-sticky";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     # hyprland-plugins has no version tags and its main branch tracks
     # hyprland-git. Pin to a commit known to build against the hyprland tag
     # above, and bump deliberately when bumping hyprland.

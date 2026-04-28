@@ -456,10 +456,8 @@ Item {
                                     property bool hovered: notifRowMouse.containsMouse || dismissMouse.containsMouse
                                     property bool dismissing: false
                                     color: hovered
-                                        ? Config.getColor("background.tertiary")
-                                        : notifRow.expanded
-                                            ? Config.getColor("background.secondary")
-                                            : "transparent"
+                                        ? Config.getColor("background.overlay")
+                                        : Config.getColor("background.surface")
                                     clip: true
 
                                     property bool expanded: root.expandAllState
@@ -528,7 +526,9 @@ Item {
                                                 Layout.preferredWidth: 20
                                                 Layout.preferredHeight: 20
                                                 radius: 4
-                                                color: Config.getColor("background.tertiary")
+                                                color: Config.getColor("background.mantle")
+                                                border.color: Config.getColor("border.subtle")
+                                                border.width: 1
                                                 clip: true
 
                                                 Image {
@@ -568,7 +568,7 @@ Item {
                                                 Text {
                                                     anchors.centerIn: parent
                                                     text: notifRow.modelData?.appName?.charAt(0)?.toUpperCase() ?? "?"
-                                                    color: Config.getColor("text.secondary")
+                                                    color: Config.getColor("text.primary")
                                                     font.pixelSize: Config.fontSizeSmall
                                                     font.weight: Font.Bold
                                                     font.family: Config.fontFamilyMonospace
@@ -700,7 +700,7 @@ Item {
                                                             text: parent.modelData.text || "Action"
                                                             color: actionMouse.containsMouse
                                                                 ? Config.getColor("primary.lavender")
-                                                                : Config.getColor("text.secondary")
+                                                                : Config.getColor("text.primary")
                                                             font.pixelSize: Config.fontSizeSmall
                                                             font.weight: Font.Medium
                                                             font.family: Config.fontFamilyMonospace
