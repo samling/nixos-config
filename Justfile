@@ -25,7 +25,7 @@ upgrade:
     @bash -c '\
       set -euo pipefail; \
       [[ -n "${GITHUB_TOKEN:-}" ]] && export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"; \
-      [[ -z "$(git status --porcelain)" ]] || { echo "Working tree dirty — commit or stash first." >&2; exit 1; }; \
+      git diff --quiet -- flake.lock pkgs/ && git diff --cached --quiet -- flake.lock pkgs/ || { echo "Uncommitted changes in flake.lock or pkgs directory; commit or stash those first." >&2; exit 1; }; \
       just update; \
       just bump-pkgs; \
       if git diff --quiet flake.lock pkgs/; then \
