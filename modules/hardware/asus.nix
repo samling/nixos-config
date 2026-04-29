@@ -12,6 +12,7 @@ in
     };
 
     services.asusd.enable = true;
+    services.lact.enable = true;
     systemd.services.asusd.wantedBy = [ "multi-user.target" ];
 
     security.sudo.extraRules = [{
@@ -43,6 +44,7 @@ in
     home.packages = [
       pkgs.amdgpu_top
       pkgs.asusctl
+      pkgs.lact
     ];
   };
 }

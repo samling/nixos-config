@@ -3,7 +3,7 @@
     home.packages = with pkgs; [
       bitwarden-cli
       doppler
-      infisical
+      infisical-bin
       littlesnitch
       tailscale
     ];

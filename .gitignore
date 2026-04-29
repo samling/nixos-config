@@ -6,4 +6,5 @@ log
 *.code-workspace
 .bwpass
 .serena
+.infisical*
 result

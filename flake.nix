@@ -10,10 +10,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     hyprland.url = "github:hyprwm/Hyprland/v0.54.3";
-    # niri-flake README recommends NOT following nixpkgs — its pinned
-    # nixpkgs is what niri-unstable is tested against. The flake enables
-    # niri.cachix.org by default so the duplicated nixpkgs is cached.
-    niri-flake.url = "github:sodiboo/niri-flake";
     niri-float-sticky = {
       url = "github:probeldev/niri-float-sticky";
       inputs.nixpkgs.follows = "nixpkgs";

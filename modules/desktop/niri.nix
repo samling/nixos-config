@@ -3,20 +3,8 @@
     inherit (config.flake.meta) dotfilesPath;
   in
 {
-  # niri-flake's NixOS module injects `homeModules.config` into
-  # `home-manager.sharedModules`, so `programs.niri.settings` is already
-  # available under home-manager without importing `homeModules.niri`.
-  # Importing the latter would set `xdg.portal.enable = true` at the user
-  # level, conflicting with the home-manager hyprland module's `false`.
-  flake.modules.nixos.desktop = { pkgs, ... }: {
-    imports = [ inputs.niri-flake.nixosModules.niri ];
-    programs.niri = {
-      enable = true;
-      # niri-flake's `niri-stable` is pinned to v25.08; `niri-unstable`
-      # tracks main and matches the current config schema. Both are
-      # covered by the niri.cachix.org substituter.
-      package = inputs.niri-flake.packages.${pkgs.stdenv.hostPlatform.system}.niri-unstable;
-    };
+  flake.modules.nixos.desktop = {
+    programs.niri.enable = true;
   };
 
   flake.modules.homeManager.desktop = { config, pkgs, ...}: {
@@ -24,7 +12,7 @@
     home.packages = [
       pkgs.swaylock
       pkgs.libinput-gestures
-      inputs.niri-flake.packages.${pkgs.stdenv.hostPlatform.system}.xwayland-satellite-unstable
+      pkgs.xwayland-satellite
       inputs.niri-float-sticky.packages.${pkgs.stdenv.hostPlatform.system}.default
     ];
     xdg.configFile."niri/config.kdl".source =
