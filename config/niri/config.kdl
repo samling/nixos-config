@@ -722,3 +722,7 @@ binds {
     // Pin a floating window (requires niri-float-sticky)
     Mod+Shift+P { spawn "niri-float-sticky" "-ipc" "toggle_sticky"; }
 }
+
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
