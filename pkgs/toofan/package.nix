@@ -2,13 +2,13 @@
 
 buildGoModule rec {
   pname = "toofan";
-  version = "2.1.1";  # or a tag if there is one
+  version = "2.2.0";  # or a tag if there is one
 
   src = fetchFromGitHub {
     owner = "vyrx-dev";
     repo = "toofan";
     rev = "master";  # pin to a commit sha for reproducibility
-    hash = "sha256-JkU1UIXuV9pKE5Tjg7nlWdgJ2manTpqnHCJg3VPTR7A=";
+    hash = "sha256-pm3q6Fb/lUl49PsxQd7+0R9iFNQbDH05fn7O4pYAWi0=";
   };
 
   vendorHash = "sha256-YSjJ8NOL97hXZLnfGYIjoKmARv+gWOsv+5qkl9konnA=";
