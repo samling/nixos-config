@@ -5,6 +5,7 @@ configuration {
     ssh
     // "recording:~/.config/rofi/screenrecording.sh"
   ];
+  cache-dir:                  "~/.cache/rofi";
   show-icons:                 true;
   terminal:                   "ghostty --class='rofi-terminal'";
   display-drun:               " Apps";
