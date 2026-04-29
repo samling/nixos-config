@@ -3,10 +3,13 @@ host := `hostname`
 boot:
     NIXPKGS_ALLOW_UNFREE=1 nh os boot --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
 
-deploy:
+apply:
     NIXPKGS_ALLOW_UNFREE=1 nh os switch --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
 
-alias apply := deploy
+# Show the most recent home-manager activation logs from this boot.
+# Use when `just apply` fails and nh hides the real error.
+log user=`whoami`:
+    journalctl -xeu home-manager-{{user}}.service -b --no-pager
 
 diff:
     NIXPKGS_ALLOW_UNFREE=1 nix build .#nixosConfigurations.{{host}}.config.system.build.toplevel --impure --out-link /tmp/nixos-result
@@ -27,7 +30,7 @@ upgrade:
       git --no-pager diff; \
       read -rp "Continue with switch? [y/N] " ans; \
       [[ "$ans" == [yY]* ]] || exit 0; \
-      just deploy; \
+      just apply; \
       git add flake.lock pkgs/; \
       git commit -m "Upgrade flake inputs and packages" || true \
     '

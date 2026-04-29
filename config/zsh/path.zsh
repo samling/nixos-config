@@ -2,6 +2,10 @@
 #
 #unset PATH
 
+# Deduplicate path
+#
+typeset -U path PATH
+
 # Essential paths
 #
 PATH=$PATH:/usr/local

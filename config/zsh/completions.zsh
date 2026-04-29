@@ -1,6 +1,6 @@
 #=== fpath (must be at top)
 fpath=($HOME/.zsh $fpath)
-fpath+=($HOME/.zsh/pure)
+fpath+=($HOME/.local/share/zsh/pure)
 
 #=== compinit
 # Fast path: skip compaudit + dump rebuild unless ~/.zcompdump is older than 24h.

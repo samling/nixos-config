@@ -1,5 +1,9 @@
+{ config, ... }:
+let
+  inherit (config.flake.meta) dotfilesPath;
+in
 {
-  flake.modules.homeManager.base = { pkgs, ... }: {
+  flake.modules.homeManager.base = { config, pkgs, ... }: {
     home.packages = with pkgs; [
       neovim
       vim
@@ -27,8 +31,8 @@
     ];
 
     home.file.".config/nvim" = {
-      source = ../../config/nvim;
-      recursive = true;
+      source = 
+        config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/config/nvim";
     };
   };
 }
