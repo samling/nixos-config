@@ -13,7 +13,7 @@ return { -- You can easily change to a different colorscheme.
   config = function()
     require('catppuccin').setup {
       flavour = 'mocha',
-      transparent_background = false,
+      transparent_background = true,
       color_overrides = ok and { mocha = overrides } or {},
       integrations = {
         blink_cmp = true,

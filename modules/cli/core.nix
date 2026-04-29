@@ -7,6 +7,7 @@
       chezmoi
       cmake
       cmatrix
+      crudini
       duf
       eza
       fd
