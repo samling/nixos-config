@@ -29,7 +29,9 @@ upgrade:
       just update; \
       just bump-pkgs; \
       if git diff --quiet flake.lock pkgs/; then \
-        echo "Nothing to upgrade."; exit 0; \
+        echo "Nothing new to bump — applying current flake state."; \
+        just apply; \
+        exit 0; \
       fi; \
       git --no-pager diff flake.lock pkgs/; \
       read -rp "Continue with switch? [y/N] " ans; \
