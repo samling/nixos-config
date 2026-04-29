@@ -25,33 +25,51 @@ upgrade:
     @bash -c '\
       set -euo pipefail; \
       [[ -n "${GITHUB_TOKEN:-}" ]] && export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"; \
-      just bump-pkgs; \
+      [[ -z "$(git status --porcelain)" ]] || { echo "Working tree dirty — commit or stash first." >&2; exit 1; }; \
       just update; \
-      git --no-pager diff; \
+      just bump-pkgs; \
+      if git diff --quiet flake.lock pkgs/; then \
+        echo "Nothing to upgrade."; exit 0; \
+      fi; \
+      git --no-pager diff flake.lock pkgs/; \
       read -rp "Continue with switch? [y/N] " ans; \
-      [[ "$ans" == [yY]* ]] || exit 0; \
+      if [[ "$ans" != [yY]* ]]; then \
+        git restore flake.lock pkgs/; \
+        echo "Reverted."; exit 0; \
+      fi; \
       just apply; \
       git add flake.lock pkgs/; \
-      git commit -m "Upgrade flake inputs and packages" || true \
+      git commit -m "Upgrade flake inputs and packages" \
     '
 
+# Per-package opt-ins:
+#   pkgs/.skip-update           one package name per line; skipped entirely
+#   pkgs/<name>/.track-branch   sentinel file → use --version=branch (else tags)
+# Failures are collected and printed at the end; recipe exits non-zero if any
+# package failed, so `upgrade` halts before committing a partial state.
 bump-pkgs:
+    @set -u; \
     blacklist="pkgs/.skip-update"; \
+    failed=""; \
     for p in pkgs/*/; do \
       name=$(basename "$p"); \
       if [ -f "$blacklist" ] && grep -qxF "$name" "$blacklist"; then \
-        echo "==> $name (skipped: in $blacklist)"; \
+        echo "==> $name (skipped)"; \
         continue; \
       fi; \
       echo "==> $name"; \
       if [ -x "$p/update.sh" ]; then \
-        "$p/update.sh"; \
+        "$p/update.sh" || failed="$failed $name"; \
+      elif [ -f "$p/.track-branch" ]; then \
+        nix run nixpkgs#nix-update -- --flake --version=branch "$name" || failed="$failed $name"; \
       else \
-        nix run nixpkgs#nix-update -- --flake "$name" \
-          || nix run nixpkgs#nix-update -- --flake --version=branch "$name" \
-          || true; \
+        nix run nixpkgs#nix-update -- --flake "$name" || failed="$failed $name"; \
       fi; \
-    done
+    done; \
+    if [ -n "$failed" ]; then \
+      printf "\nFailed to update:%s\n" "$failed" >&2; \
+      exit 1; \
+    fi
 
 clean:
   nh clean all -k 20 --keep-since 14d --nogc

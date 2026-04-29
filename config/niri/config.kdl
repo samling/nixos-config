@@ -286,7 +286,10 @@ spawn-at-startup "ghostty"
 spawn-at-startup "code"
 spawn-at-startup "vesktop"
 spawn-at-startup "obsidian"
+
+// Background services
 spawn-sh-at-startup	"killall niri-float-sticky; niri-float-sticky -disable-auto-stick"
+spawn-at-startup "ie-r"
 
 // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
@@ -732,6 +735,7 @@ binds {
 
     // Pin a floating window (requires niri-float-sticky)
     Mod+Shift+P { spawn "niri-float-sticky" "-ipc" "toggle_sticky"; }
+    Mod+Alt+P { spawn "pkill" "-SIGUSR1" "ie-r"; }
 }
 
 debug {

@@ -1,22 +1,29 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ lib, stdenvNoCC, fetchurl }:
 
-buildGoModule rec {
+stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "toofan";
-  version = "2.2.0";  # or a tag if there is one
+  version = "2.2.0";
 
-  src = fetchFromGitHub {
-    owner = "vyrx-dev";
-    repo = "toofan";
-    rev = "master";  # pin to a commit sha for reproducibility
-    hash = "sha256-pm3q6Fb/lUl49PsxQd7+0R9iFNQbDH05fn7O4pYAWi0=";
+  src = fetchurl {
+    url = "https://github.com/vyrx-dev/toofan/releases/download/v${finalAttrs.version}/toofan_${finalAttrs.version}_linux_amd64.tar.gz";
+    hash = "sha256-zG75MQNsyEYKf6i/4vaMKVfvpU6ZJGMTFVnBJU17UPU=";
   };
 
-  vendorHash = "sha256-YSjJ8NOL97hXZLnfGYIjoKmARv+gWOsv+5qkl9konnA=";
+  sourceRoot = ".";
+  dontConfigure = true;
+  dontBuild = true;
+
+  installPhase = ''
+    runHook preInstall
+    install -Dm755 toofan $out/bin/toofan
+    runHook postInstall
+  '';
 
   meta = {
     description = "Minimal, lightning-fast typing TUI";
     homepage = "https://github.com/vyrx-dev/toofan";
+    license = lib.licenses.mit;
     mainProgram = "toofan";
+    platforms = [ "x86_64-linux" ];
   };
-}
-
+})

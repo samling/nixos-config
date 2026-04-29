@@ -1,26 +1,32 @@
-{
-  lib,
-  rustPlatform,
-  fetchFromGitHub,
-}:
+{ lib, stdenv, stdenvNoCC, fetchurl, autoPatchelfHook }:
 
-rustPlatform.buildRustPackage (finalAttrs: {
+stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "mermaid-rs-renderer";
-  version = "0.2.1";
+  version = "0.2.2";
 
-  src = fetchFromGitHub {
-    owner = "1jehuang";
-    repo = "mermaid-rs-renderer";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-lQCloOhTqqEU8MNrkUmmJFdoOTEE3j5nvZJo21GJlMU=";      # fill in after first build
+  src = fetchurl {
+    url = "https://github.com/1jehuang/mermaid-rs-renderer/releases/download/v${finalAttrs.version}/mmdr-x86_64-unknown-linux-gnu.tar.gz";
+    hash = "sha256-ql4sXzlGTiUu+mxlSTc0i/hXADQU5Pv4IptaxB3OI/c=";
   };
 
-  cargoHash = "sha256-IETAA/TTbdFaZYHMx8imV0cdnq+2VSgU1a4AdcSuxGM=";    # fill in after first build
+  nativeBuildInputs = [ autoPatchelfHook ];
+  buildInputs = [ stdenv.cc.cc.lib ];
+
+  sourceRoot = ".";
+  dontConfigure = true;
+  dontBuild = true;
+
+  installPhase = ''
+    runHook preInstall
+    install -Dm755 mmdr $out/bin/mmdr
+    runHook postInstall
+  '';
 
   meta = {
     description = "Fast native Rust Mermaid diagram renderer";
     homepage = "https://github.com/1jehuang/mermaid-rs-renderer";
     license = lib.licenses.mit;
     mainProgram = "mmdr";
+    platforms = [ "x86_64-linux" ];
   };
 })
