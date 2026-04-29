@@ -9,3 +9,7 @@ mermaid-rs-renderer
 # src is a path inside nixpkgs' sandbox-runtime derivation, not a URL — there's
 # nothing for nix-update to bump. Version tracks nixpkgs via `nix flake update`.
 claude-seccomp
+
+# Built from a local checkout (~/Documents/HomeLab/command-snippets), not a
+# GitHub release. There's no upstream version for nix-update to chase.
+command-snippets

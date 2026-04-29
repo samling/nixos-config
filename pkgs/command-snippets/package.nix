@@ -1,15 +1,10 @@
-{ lib, buildGoModule, fetchFromGitHub }:
+{ buildGoModule, src }:
 
 buildGoModule {
   pname = "command-snippets";
-  version = "0.1.0";
+  version = "0.1.0-local";
 
-  src = fetchFromGitHub {
-    owner = "samling";
-    repo = "command-snippets";
-    rev = "v0.1.0";
-    hash = "sha256-7IadnnoIvEPbrtP4UFf16dIGPUT00MdWwp9/n8sOkkA=";
-  };
+  inherit src;
 
   vendorHash = "sha256-o1zT1XczVYtFW51lT3u+E0kCRdwQ8BibPGh4Rdo5BIk=";
 

@@ -2,12 +2,9 @@
   flake.modules.homeManager.base = { config, lib, pkgs, ... }:
     let
       localPath = "${config.home.homeDirectory}/Documents/HomeLab/command-snippets";
-      command-snippets =
-        if builtins.pathExists localPath
-        then pkgs.command-snippets.overrideAttrs (_: {
-          src = lib.cleanSource (/. + localPath);
-        })
-        else pkgs.command-snippets;
+      command-snippets = pkgs.callPackage ../../pkgs/command-snippets/package.nix {
+        src = lib.cleanSource (/. + localPath);
+      };
     in {
       home.packages = [ command-snippets ];
 
@@ -16,6 +13,9 @@
         recursive = true;
       };
 
+      # Bootstrap: ensure the local clone exists so future activations build
+      # from it. The first activation on a fresh machine still needs to be
+      # preceded by a manual clone (build runs before activation).
       home.activation.cloneCommandSnippets =
         lib.hm.dag.entryAfter [ "writeBoundary" ] ''
           if [ ! -d "${localPath}/.git" ]; then
