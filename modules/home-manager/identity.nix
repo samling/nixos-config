@@ -8,7 +8,7 @@ in
       inherit (owner) username;
       homeDirectory =
         if pkgs.stdenv.hostPlatform.isDarwin then owner.homeDirectoryDarwin else owner.homeDirectoryLinux;
-      inherit (owner) stateVersion;
+      stateVersion = owner.homeManagerStateVersion;
     };
   };
 }

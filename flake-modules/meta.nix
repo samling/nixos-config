@@ -5,7 +5,7 @@ let
     description = "Sam Boynton";
     homeDirectoryLinux = "/home/sboynton";
     homeDirectoryDarwin = "/Users/sboynton";
-    stateVersion = "24.11";
+    homeManagerStateVersion = "24.11";
   };
 in
 {
