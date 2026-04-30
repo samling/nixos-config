@@ -39,6 +39,7 @@
       viddy
       watch
       wget
+      whois
       xxhash
       yq
       zip
