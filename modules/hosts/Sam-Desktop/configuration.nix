@@ -12,6 +12,12 @@ in
       exec "${winChrome}" "$@"
     '';
   in {
+    imports = [ config.flake.roles.nixos.wsl ];
+
+    networking.hostName = "Sam-Desktop";
+    nixpkgs.hostPlatform = "x86_64-linux";
+    system.stateVersion = "25.11";
+
     home-manager.users.${owner} = {
       # xdg-utils gives us a real xdg-open so CLIs like tsh (which shell out
       # to xdg-open and ignore $BROWSER) resolve via mimeApps → the desktop
