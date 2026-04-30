@@ -1,0 +1,48 @@
+{
+  flake.modules.homeManager.common = { pkgs, ... }: {
+    home.packages = with pkgs; [
+      bat
+      bc
+      btop
+      chezmoi
+      cmake
+      cmatrix
+      crudini
+      duf
+      eza
+      fd
+      file
+      fzf
+      gitoverit
+      glib
+      glow
+      htop
+      inotify-tools
+      jq
+      just
+      killall
+      kmod
+      libnotify
+      lsof
+      nvd
+      psmisc
+      ranger
+      read-edid
+      rhash
+      ripgrep
+      toofan
+      tree
+      ts
+      unixodbc
+      unzip
+      v4l-utils
+      viddy
+      watch
+      wget
+      xxhash
+      yq
+      zip
+      zoxide
+    ];
+  };
+}

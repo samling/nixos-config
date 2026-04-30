@@ -4,18 +4,18 @@ let
 in
 {
   flake.modules.nixos = {
-    base = {
+    common = {
       imports = [ inputs.home-manager.nixosModules.home-manager ];
 
       home-manager = {
         useGlobalPkgs = true;
         useUserPackages = true;
-        users.${username}.imports = [ config.flake.modules.homeManager.base ];
+        users.${username}.imports = [ config.flake.modules.homeManager.common ];
       };
     };
 
-    desktop = {
-      home-manager.users.${username}.imports = [ config.flake.modules.homeManager.desktop ];
+    graphical = {
+      home-manager.users.${username}.imports = [ config.flake.modules.homeManager.graphical ];
     };
 
     laptop = {
