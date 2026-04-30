@@ -8,8 +8,8 @@ Personal NixOS + home-manager configuration, with a chezmoi/doppler layer for th
 | --- | --- |
 | `flake.nix` | inputs + import-tree entry point |
 | `flake-modules/` | framework glue — option declarations, the homeManager↔NixOS bridge |
-| `modules/<persona>/` | leaf NixOS + home-manager config. Folder name == persona name |
-| `roles/<role>.nix` | role bundles — each picks a list of personas a host wants together |
+| `modules/<module>/` | leaf NixOS + home-manager config. Folder name == module name |
+| `roles/<role>.nix` | role bundles — each picks a list of modules a host wants together |
 | `hosts/<host>/` | one `configuration.nix` (+ optional `hardware-configuration.nix`) per machine |
 | `config/` | static dotfile sources imported by home-manager modules |
 | `pkgs/` | custom `callPackage` recipes |

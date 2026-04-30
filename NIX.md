@@ -1,18 +1,18 @@
 # NixOS Setup
 
-This config uses a layered [dendritic-style](https://github.com/mightyiam/dendritic) pattern: leaf modules merge by name into named *personas*, *roles* bundle personas together, and *hosts* import one role plus their own hardware.
+This config uses a layered [dendritic-style](https://github.com/mightyiam/dendritic) pattern: files in a folder merge into one named *module*, *roles* bundle modules together, and *hosts* import one role plus their own hardware.
 
 Four top-level directories, each with one job:
 
 | Dir | Contents | Writes |
 |---|---|---|
 | `flake-modules/` | framework glue — option declarations, the homeManager↔NixOS bridge | `options.flake.*`, framework-level config |
-| `modules/<persona>/` | leaf config — files contributing to one persona | `flake.modules.{nixos,homeManager}.<persona>` |
-| `roles/<role>.nix` | role bundles — each picks a list of personas | `flake.roles.nixos.<role>` |
+| `modules/<module>/` | leaf config — files contributing to one module | `flake.modules.{nixos,homeManager}.<module>` |
+| `roles/<role>.nix` | role bundles — each picks a list of modules | `flake.roles.nixos.<role>` |
 | `hosts/<host>/` | one host's `configuration.nix` + `hardware-configuration.nix` | `configurations.nixos.<host>.module` |
 
 Folder discipline:
-- Every `.nix` in `modules/<x>/` only writes `flake.modules.{nixos,homeManager}.<x>`. Folder name == persona name.
+- Every `.nix` in `modules/<x>/` only writes `flake.modules.{nixos,homeManager}.<x>`. Folder name == module name.
 - Every `.nix` in `roles/` is one role, only writes `flake.roles.nixos.<role>`, body is only `imports = [...]` — no real config in role files.
 - Every `.nix` in `hosts/<h>/` only writes `configurations.nixos.<h>.module`. Imports one role plus host-specific overrides.
 - Every `.nix` in `flake-modules/` only declares options or wires framework glue. No domain config.
@@ -28,7 +28,7 @@ flake-modules/                           # framework glue
   roles.nix                              # options.flake.roles
   home-manager.nix                       # nixos.<class> ↔ homeManager.<class> bridge
 
-modules/                                 # leaf personas — folder name == persona name
+modules/                                 # leaf modules — folder name == module name
   common/                                # → nixos.common + homeManager.common (every host)
   graphical/                             # → nixos.graphical + homeManager.graphical (Wayland DE)
   laptop/                                # → nixos.laptop + homeManager.laptop (laptop hardware)
@@ -58,13 +58,13 @@ pkgs/                                    # custom callPackage recipes
 
 ## How it works
 
-### Personas merge by name
+### Modules merge by name
 
-Most files don't declare a new module — they contribute to an existing persona by name. `modules/graphical/audio.nix` writes `flake.modules.nixos.graphical = { services.pipewire.enable = true; }`; `modules/graphical/bluetooth.nix` writes `flake.modules.nixos.graphical = { hardware.bluetooth.enable = true; }`; flake-parts merges them. Adding a feature = drop a file in the right folder, not edit an imports list.
+Most files don't declare a new module — they contribute to an existing module by name. `modules/graphical/audio.nix` writes `flake.modules.nixos.graphical = { services.pipewire.enable = true; }`; `modules/graphical/bluetooth.nix` writes `flake.modules.nixos.graphical = { hardware.bluetooth.enable = true; }`; flake-parts merges them. Adding a feature = drop a file in the right folder, not edit an imports list.
 
-### Roles bundle personas
+### Roles bundle modules
 
-A role file is just `imports = [...]` — a list of personas a host wants together:
+A role file is just `imports = [...]` — a list of modules a host wants together:
 
 ```nix
 # roles/laptop.nix
@@ -79,7 +79,7 @@ A role file is just `imports = [...]` — a list of personas a host wants togeth
 
 Hosts therefore stay tiny — one role import plus a few host-specific overrides.
 
-`flake.roles.nixos.laptop` (the bundle) and `flake.modules.nixos.laptop` (the form-factor persona) live in different attribute paths — no collision, even though they share a name.
+`flake.roles.nixos.laptop` (the bundle) and `flake.modules.nixos.laptop` (the form-factor module) live in different attribute paths — no collision, even though they share a name.
 
 ### HM is wired into NixOS centrally
 
@@ -105,9 +105,9 @@ Hosts therefore list only NixOS classes (via the role they import). Pulling in `
 
 `flake-modules/meta.nix` is the single source of truth for username, home directory, description, and home-manager state version. Every module that needs the current user references `config.flake.meta.owner.*` instead of hardcoding `"sboynton"`. The home-manager `stateVersion` is stored as `homeManagerStateVersion` to make its scope explicit — system stateVersion is set per-host in `hosts/<h>/configuration.nix`.
 
-## Personas
+## Modules
 
-| Persona | Means | Class(es) | Files |
+| Module | Means | Class(es) | Files |
 |---|---|---|---|
 | `common` | universal foundation — nix, user, locale, openssh, shell, dotfiles, CLI tools | nixos + homeManager | `modules/common/` |
 | `graphical` | Wayland DE (hyprland), theming, GUI apps | nixos + homeManager | `modules/graphical/` |
@@ -175,7 +175,7 @@ flowchart TB
     HOST --> ROLE[flake.roles.nixos.&lt;role&gt;<br/>━━━<br/>roles/&lt;role&gt;.nix]:::role
 
     ROLE --> commonC[common<br/>━━━<br/>modules/common/*.nix]:::always
-    ROLE --> featC[feature personas<br/>━━━<br/>graphical · laptop · dev · games<br/>virtualization · wsl · tailscale · work]:::feature
+    ROLE --> featC[feature modules<br/>━━━<br/>graphical · laptop · dev · games<br/>virtualization · wsl · tailscale · work]:::feature
 
     commonC -. wires .-> hmC[homeManager.common<br/>modules/common/*.nix]:::always
     featC -. wires .-> hmF[homeManager.&lt;class&gt;<br/>modules/graphical/*.nix · modules/laptop/*.nix<br/>modules/work/*.nix]:::feature
@@ -195,9 +195,9 @@ flowchart TB
 
 **Reading it:**
 - `import-tree` loads every `.nix` under `modules/`, `roles/`, `hosts/`, and `flake-modules/`.
-- The host's `configuration.nix` imports one role; the role imports personas; persona files merge by name.
-- HM content is carried automatically by the matching nixos persona via the bridge.
-- Feature personas pull their flake inputs only when actually imported — WSL doesn't evaluate hyprland, xen doesn't evaluate nixos-wsl.
+- The host's `configuration.nix` imports one role; the role imports modules; module files merge by name.
+- HM content is carried automatically by the matching nixos module via the bridge.
+- Feature modules pull their flake inputs only when actually imported — WSL doesn't evaluate hyprland, xen doesn't evaluate nixos-wsl.
 
 ## Bootstrap (new machine)
 
@@ -300,8 +300,8 @@ For when the repo is already set up and you want to provision another machine.
 
 ## Adding a feature module
 
-1. Decide which persona the feature belongs to — see the [personas table](#personas).
-2. Drop a file in `modules/<persona>/`. Just contribute to the persona — no new named module needed:
+1. Decide which module the feature belongs to — see the [modules table](#modules).
+2. Drop a file in `modules/<module>/`. Just contribute to the module — no new named module needed:
    ```nix
    # modules/graphical/myapp.nix
    {
@@ -321,14 +321,14 @@ For when the repo is already set up and you want to provision another machine.
    ```
 3. Done. Every host whose role imports `graphical` automatically gets the new content on the next rebuild.
 
-If the feature is a **new persona** (a new axis hosts opt into):
-1. Create `modules/<new-persona>/`.
-2. Wire its homeManager twin in `flake-modules/home-manager.nix` if the persona has a homeManager side.
+If the feature is a **new module** (a new axis hosts opt into):
+1. Create `modules/<new-module>/`.
+2. Wire its homeManager twin in `flake-modules/home-manager.nix` if the module has a homeManager side.
 3. Add it to the role(s) that should pick it up.
 
 ## Adding a role
 
-Roles are just bundles of personas. To create one:
+Roles are just bundles of modules. To create one:
 
 ```nix
 # roles/server.nix
