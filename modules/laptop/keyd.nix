@@ -11,12 +11,18 @@ in
         settings.main = {
           capslock = "leftcontrol";
           "f23+leftshift+leftmeta" = "M-A-c";
-          rightalt = "C-w";
-          "rightshift+rightalt" = "C-t";
-          "leftshift+rightalt" = "C-t";
+          rightalt = "overload(ralt, C-w)";
+          rightshift = "overload(rshift, rightshift)";
+        };
+        settings.rshift = {
+          rightalt = "C-t";
+        };
+        settings.ralt = { # order-independent extra binding
+          rightshift = "C-t";
         };
         extraConfig = ''
           [control+alt]
+          [shift+alt]
         '';
       };
     };
@@ -42,6 +48,8 @@ in
       [google-chrome*]
       control+alt.[ = C-S-tab
       control+alt.] = C-tab
+      shift+alt.[ = C-S-tab
+      shift+alt.] = C-tab
     '';
 
     systemd.user.services.keyd-application-mapper = {
