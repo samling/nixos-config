@@ -48,6 +48,7 @@
         (import-tree.filterNot (lib.hasSuffix "hardware-configuration.nix") ./modules)
         (import-tree.filterNot (lib.hasSuffix "/package.nix") ./pkgs)
         (import-tree ./flake-modules)
+        (import-tree ./roles)
       ] ++ lib.optional (builtins.pathExists /home/sboynton/work-dotfiles/default.nix) /home/sboynton/work-dotfiles/default.nix;
 
       options.flake.modules = lib.mkOption {

@@ -1,12 +1,6 @@
 { config, ... }:
 {
   configurations.nixos."Sam-Desktop".module = {
-    imports = with config.flake.modules.nixos; [
-      common
-      dev
-      virtualization
-      work
-      wsl
-    ];
+    imports = [ config.flake.roles.nixos.wsl ];
   };
 }
