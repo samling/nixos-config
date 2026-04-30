@@ -16,17 +16,39 @@ diff:
     nvd diff /run/current-system /tmp/nixos-result
     rm -f result
 
-update:
+update-lock:
     nix flake update
 
 # Non-shebang to avoid WSLg's noexec /run/user/$UID overlay, where just writes
 # shebang recipes and fails to execve them.
+update:
+    @bash -c '\
+      set -euo pipefail; \
+      [[ -n "${GITHUB_TOKEN:-}" ]] && export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"; \
+      git diff --quiet -- pkgs/ && git diff --cached --quiet -- pkgs/ || { echo "Uncommitted changes in pkgs directory; commit or stash those first." >&2; exit 1; }; \
+      just bump-pkgs; \
+      if git diff --quiet pkgs/; then \
+        echo "Nothing new to bump — applying current flake state."; \
+        just apply; \
+        exit 0; \
+      fi; \
+      git --no-pager diff pkgs/; \
+      read -rp "Continue with switch? [y/N] " ans; \
+      if [[ "$ans" != [yY]* ]]; then \
+        git restore pkgs/; \
+        echo "Reverted."; exit 0; \
+      fi; \
+      just apply; \
+      git add pkgs/; \
+      git commit -m "Upgrade packages" \
+    '
+
 upgrade:
     @bash -c '\
       set -euo pipefail; \
       [[ -n "${GITHUB_TOKEN:-}" ]] && export NIX_CONFIG="access-tokens = github.com=$GITHUB_TOKEN"; \
       git diff --quiet -- flake.lock pkgs/ && git diff --cached --quiet -- flake.lock pkgs/ || { echo "Uncommitted changes in flake.lock or pkgs directory; commit or stash those first." >&2; exit 1; }; \
-      just update; \
+      just update-lock; \
       just bump-pkgs; \
       if git diff --quiet flake.lock pkgs/; then \
         echo "Nothing new to bump — applying current flake state."; \

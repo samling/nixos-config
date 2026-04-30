@@ -1,18 +1,28 @@
-{ buildGoModule, src }:
+{ lib, stdenvNoCC, fetchurl }:
 
-buildGoModule {
+stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "command-snippets";
-  version = "0.1.0-local";
+  version = "0.1.1";
 
-  inherit src;
+  src = fetchurl {
+    url = "https://github.com/samling/command-snippets/releases/download/v${finalAttrs.version}/cs-v${finalAttrs.version}-linux-amd64.tar.gz";
+    hash = "sha256-cwKrLl0AMCT7CBEaoNNKZ97bKu7rtck1bYLYmILO1X4=";
+  };
 
-  vendorHash = "sha256-o1zT1XczVYtFW51lT3u+E0kCRdwQ8BibPGh4Rdo5BIk=";
+  sourceRoot = ".";
+  dontConfigure = true;
+  dontBuild = true;
 
-  subPackages = [ "cmd/cs" ];
+  installPhase = ''
+    runHook preInstall
+    install -Dm755 cs $out/bin/cs
+    runHook postInstall
+  '';
 
   meta = {
     description = "Fuzzy-searchable command snippet manager";
     homepage = "https://github.com/samling/command-snippets";
     mainProgram = "cs";
+    platforms = [ "x86_64-linux" ];
   };
-}
+})

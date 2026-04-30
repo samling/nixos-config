@@ -1,6 +1,6 @@
 # Packages that `just bump-pkgs` should leave alone.
 # One package name (directory basename under pkgs/) per line. `#` for comments.
-# Remove an entry here to re-enable auto-bumps on the next `just upgrade`.
+# Remove an entry here to re-enable auto-bumps on the next `just update`/`just upgrade`.
 
 # v0.2.2 introduced a failing layout test upstream; pinned to 0.2.1 until fixed.
 # https://github.com/1jehuang/mermaid-rs-renderer
@@ -10,6 +10,3 @@ mermaid-rs-renderer
 # nothing for nix-update to bump. Version tracks nixpkgs via `nix flake update`.
 claude-seccomp
 
-# Built from a local checkout (~/Documents/HomeLab/command-snippets), not a
-# GitHub release. There's no upstream version for nix-update to chase.
-command-snippets

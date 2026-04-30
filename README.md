@@ -70,9 +70,10 @@ Configure and run `chezmoi`:
 just boot          # nh os boot for the current host
 just apply/deploy  # nh os switch for the current host
 just diff          # preview the nvd closure diff without activating
-just update        # nix flake update
-just bump-pkgs     # flake update for each package in ./pkgs/
-just upgrade       # equivalent of `just update` + `just bump-pkgs` + `just apply`
+just update-lock   # nix flake update (bumps flake.lock only)
+just bump-pkgs     # nix-update for each package in ./pkgs/ (no apply, no commit)
+just update        # `just bump-pkgs` + diff + confirm + `just apply` + commit
+just upgrade       # `just update-lock` + `just bump-pkgs` + diff + confirm + `just apply` + commit
 ```
 
 ### Chezmoi reference

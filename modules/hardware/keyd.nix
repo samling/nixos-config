@@ -8,8 +8,13 @@ in
       enable = true;
       keyboards.default = {
         ids = [ "*" ];
-        settings.main.capslock = "leftcontrol";
-        settings.main."f23+leftshift+leftmeta" = "M-A-c";
+        settings.main = {
+          capslock = "leftcontrol";
+          "f23+leftshift+leftmeta" = "M-A-c";
+          rightalt = "C-w";
+          "rightshift+rightalt" = "C-t";
+          "leftshift+rightalt" = "C-t";
+        };
         extraConfig = ''
           [control+alt]
         '';
