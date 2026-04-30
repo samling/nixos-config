@@ -2,11 +2,11 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "command-snippets";
-  version = "0.1.1";
+  version = "0.1.2";
 
   src = fetchurl {
     url = "https://github.com/samling/command-snippets/releases/download/v${finalAttrs.version}/cs-v${finalAttrs.version}-linux-amd64.tar.gz";
-    hash = "sha256-cwKrLl0AMCT7CBEaoNNKZ97bKu7rtck1bYLYmILO1X4=";
+    hash = "sha256-AEQm6lngjNqECx9g34BA15iaqeip+3Jsjosiwq5/nII=";
   };
 
   sourceRoot = ".";
