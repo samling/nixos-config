@@ -1,163 +1,161 @@
 # NixOS Setup
 
-This config uses the [dendritic pattern](https://github.com/mightyiam/dendritic):
-each `.nix` file under `modules/` contributes to one or more named modules via
-`flake.modules.<class>.<name>`, and many files merge into a small set of
-class modules that hosts then compose.
+This config uses a layered [dendritic-style](https://github.com/mightyiam/dendritic) pattern: files in a folder merge into one named *module*, *roles* bundle modules together, and *hosts* import one role plus their own hardware.
+
+Four top-level directories, each with one job:
+
+| Dir | Contents | Writes |
+|---|---|---|
+| `flake-modules/` | framework glue — option declarations, the homeManager↔NixOS bridge | `options.flake.*`, framework-level config |
+| `modules/<module>/` | leaf config — files contributing to one module | `flake.modules.{nixos,homeManager}.<module>` |
+| `roles/<role>.nix` | role bundles — each picks a list of modules | `flake.roles.nixos.<role>` |
+| `hosts/<host>/` | one host's `configuration.nix` + `hardware-configuration.nix` | `configurations.nixos.<host>.module` |
+
+Folder discipline:
+- Every `.nix` in `modules/<x>/` only writes `flake.modules.{nixos,homeManager}.<x>`. Folder name == module name.
+- Every `.nix` in `roles/` is one role, only writes `flake.roles.nixos.<role>`, body is only `imports = [...]` — no real config in role files.
+- Every `.nix` in `hosts/<h>/` only writes `configurations.nixos.<h>.module`. Imports one role plus host-specific overrides.
+- Every `.nix` in `flake-modules/` only declares options or wires framework glue. No domain config.
 
 ## Repo structure
 
 ```
-flake.nix                          # entry point — inputs + import-tree invocation
-modules/
-  meta/owner.nix                   # flake.meta.owner (username, state version, …) — single source of truth
-  configurations/nixos.nix         # options.configurations.nixos + derives flake.nixosConfigurations
+flake.nix                                # entry — inputs + import-tree
 
-  home-manager/
-    nixos.nix                      # NixOS-side wiring: each nixos class pulls its homeManager twin into
-                                   #   home-manager.users.${owner}.imports
-    identity.nix                   # homeManager.base: home.username / homeDirectory / stateVersion
-    core.nix                       # homeManager.base: programs.home-manager.enable, direnv
+flake-modules/                           # framework glue
+  meta.nix                               # options.flake.meta + owner constants
+  nixos-configs.nix                      # configurations.nixos.<h> → flake.nixosConfigurations
+  roles.nix                              # options.flake.roles
+  home-manager.nix                       # nixos.<class> ↔ homeManager.<class> bridge
 
-  base/                            # → nixos.base (universal foundation)
-    {nix,kernel,networking,locale,user,zsh,systemd}.nix
+modules/                                 # leaf modules — folder name == module name
+  common/                                # → nixos.common + homeManager.common (every host)
+  graphical/                             # → nixos.graphical + homeManager.graphical (Wayland DE)
+  laptop/                                # → nixos.laptop + homeManager.laptop (laptop hardware)
+  dev/                                   # → nixos.dev (docker, nix-ld, dconf)
+  games/                                 # → nixos.games (Steam)
+  virtualization/                        # → nixos.virtualization (libvirt, kvm)
+  work/                                  # → homeManager.work (teleport, vault)
+  wsl/                                   # → nixos.wsl (NixOS-WSL boot, x-forwarding)
+  tailscale/                             # → nixos.tailscale (tailscaled, firewall)
 
-  cli/                             # → homeManager.base (CLI tools for every user)
-    {core,git,zsh,tmux,neovim,dev-tools,nix-tools,kubernetes,media,lsd,bat,btop,ripgrep,command-snippets}.nix
+roles/                                   # role bundles
+  laptop.nix                             # → flake.roles.nixos.laptop
+  wsl.nix                                # → flake.roles.nixos.wsl
 
-  desktop/                         # → nixos.desktop + homeManager.desktop (graphical DE persona)
-    {hyprland,hyprland-packages,hyprland-uwsm}.nix
-    {audio,bluetooth,portal,regreet,disk,power,networking}.nix
-    {theming,qt6ct,fonts,xdg}.nix
-    {terminals,file-manager,browsers,chat,editors,media,remote-desktop}.nix
-    {awww,rofi,quickshell,matugen,wallust,ghostty,clipboard}.nix
-    security.nix                   # wireshark + littlesnitch (GUI workstation tools)
+hosts/                                   # one folder per machine
+  xen/
+    configuration.nix                    # imports flake.roles.nixos.laptop + host specifics
+    hardware-configuration.nix           # nixos-generate-config output (filtered out of import-tree)
+  Sam-Desktop/
+    configuration.nix
 
-  dev/                             # → nixos.dev
-    {docker,nix-ld}.nix
-
-  hardware/                        # → nixos.laptop + homeManager.laptop
-    asus.nix, keyd.nix, edid_mclk_fix.bin
-
-  games/steam.nix                  # → nixos.games
-  work/{teleport,vault}.nix        # → homeManager.work
-  wsl/{wsl,x-forwarding}.nix       # → nixos.wsl
-  tailscale.nix                    # → nixos.tailscale (opt-in per host)
-
-  hosts/<hostname>/                # → configurations.nixos.<hostname>.module
-    {imports,hostname,platform,state-version,…}.nix
-    hardware-configuration.nix     # filtered out of import-tree, imported explicitly by imports.nix
-
-config/                            # static dotfile sources referenced by home-manager modules
-pkgs/                              # custom callPackage recipes
+config/                                  # static dotfiles symlinked by home-manager
+pkgs/                                    # custom callPackage recipes
 ```
 
-Every `.nix` under `modules/` is auto-discovered by
-[`import-tree`](https://github.com/vic/import-tree) — add a file, its
-`flake.modules.*` contributions are active on the next rebuild. Only
-`hardware-configuration.nix` is filtered out of the tree; it's a plain NixOS
-module that each host imports explicitly from its `imports.nix`.
+`import-tree` auto-loads every `.nix` under `modules/`, `flake-modules/`, `roles/`, and `hosts/`. Add a file, its contributions are active on the next rebuild. The only filter is on `hardware-configuration.nix` — that's a NixOS module imported explicitly by the host's `configuration.nix`, not a flake-module.
 
 ## How it works
 
-**Class modules.** A small set of names under `flake.modules.nixos.*` and
-`flake.modules.homeManager.*` — the *classes*. Each class answers one question
-about a host: "is this host a `desktop`? a `laptop`? running under `wsl`?".
+### Modules merge by name
 
-**Files merge into classes.** Most feature files never declare a new named
-module; they contribute to an existing class by name. `modules/desktop/audio.nix`
-writes `flake.modules.nixos.desktop = { services.pipewire.enable = true; }`;
-`modules/desktop/bluetooth.nix` writes `flake.modules.nixos.desktop = {
-hardware.bluetooth.enable = true; }`; flake-parts merges them. Adding a
-feature = dropping a file in the right folder, not editing an imports list.
+Most files don't declare a new module — they contribute to an existing module by name. `modules/graphical/audio.nix` writes `flake.modules.nixos.graphical = { services.pipewire.enable = true; }`; `modules/graphical/bluetooth.nix` writes `flake.modules.nixos.graphical = { hardware.bluetooth.enable = true; }`; flake-parts merges them. Adding a feature = drop a file in the right folder, not edit an imports list.
 
-**HM is wired into NixOS centrally.** `modules/home-manager/nixos.nix` declares
-that every NixOS class pulls its homeManager twin into
-`home-manager.users.${owner}.imports`:
+### Roles bundle modules
+
+A role file is just `imports = [...]` — a list of modules a host wants together:
 
 ```nix
-flake.modules.nixos.base = {
+# roles/laptop.nix
+{ config, ... }: {
+  flake.roles.nixos.laptop = {
+    imports = with config.flake.modules.nixos; [
+      common graphical dev games laptop tailscale virtualization
+    ];
+  };
+}
+```
+
+Hosts therefore stay tiny — one role import plus a few host-specific overrides.
+
+`flake.roles.nixos.laptop` (the bundle) and `flake.modules.nixos.laptop` (the form-factor module) live in different attribute paths — no collision, even though they share a name.
+
+### HM is wired into NixOS centrally
+
+`flake-modules/home-manager.nix` declares that every NixOS class pulls its homeManager twin into `home-manager.users.${owner}.imports`:
+
+```nix
+flake.modules.nixos.common = {
   imports = [ inputs.home-manager.nixosModules.home-manager ];
   home-manager = {
     useGlobalPkgs = true;
     useUserPackages = true;
-    users.${username}.imports = [ config.flake.modules.homeManager.base ];
+    users.${username}.imports = [ config.flake.modules.homeManager.common ];
   };
 };
-flake.modules.nixos.desktop.home-manager.users.${username}.imports =
-  [ config.flake.modules.homeManager.desktop ];
-# …etc for laptop, work
+flake.modules.nixos.graphical.home-manager.users.${username}.imports =
+  [ config.flake.modules.homeManager.graphical ];
+# … etc for laptop, work
 ```
 
-Hosts therefore list **only NixOS classes**. Importing `nixos.desktop`
-automatically pulls in `homeManager.desktop` for the owner. There is no
-"second list" for HM modules in a host file.
+Hosts therefore list only NixOS classes (via the role they import). Pulling in `nixos.graphical` automatically pulls in `homeManager.graphical` for the owner. There is no "second list" for HM modules in a host file.
 
-**Owner is one value.** `modules/meta/owner.nix` is the single source of truth
-for username, home directory, description, and state version. Every module
-that needs the current user references `config.flake.meta.owner.*` instead of
-hardcoding `"sboynton"`.
+### Owner is one value
 
-## Classes
+`flake-modules/meta.nix` is the single source of truth for username, home directory, description, and home-manager state version. Every module that needs the current user references `config.flake.meta.owner.*` instead of hardcoding `"sboynton"`. The home-manager `stateVersion` is stored as `homeManagerStateVersion` to make its scope explicit — system stateVersion is set per-host in `hosts/<h>/configuration.nix`.
 
-| NixOS class | Means | Files |
+## Modules
+
+| Module | Means | Class(es) | Files |
+|---|---|---|---|
+| `common` | universal foundation — nix, user, locale, openssh, shell, dotfiles, CLI tools | nixos + homeManager | `modules/common/` |
+| `graphical` | Wayland DE (hyprland), theming, GUI apps | nixos + homeManager | `modules/graphical/` |
+| `laptop` | laptop hardware (asus fan/edid, keyd) | nixos + homeManager | `modules/laptop/` |
+| `dev` | dev tooling (docker, nix-ld, dconf) | nixos | `modules/dev/` |
+| `games` | Steam | nixos | `modules/games/` |
+| `virtualization` | libvirt + kvm | nixos | `modules/virtualization/` |
+| `wsl` | running under WSL | nixos | `modules/wsl/` |
+| `tailscale` | tailscaled + firewall | nixos | `modules/tailscale/` |
+| `work` | teleport, vault | homeManager | `modules/work/` |
+
+## Roles
+
+| Role | Bundles | Used by |
 |---|---|---|
-| `base` | universal foundation — nix, user, locale, openssh, home-manager machinery | `base/`, `home-manager/nixos.nix` |
-| `desktop` | graphical Linux DE (hyprland) | `desktop/` |
-| `laptop` | laptop hardware (asus fan/edid, keyd) | `hardware/` |
-| `wsl` | running under WSL | `wsl/` |
-| `dev` | dev tooling (docker, nix-ld) | `dev/` |
-| `games` | Steam | `games/` |
-| `work` | work persona — wires homeManager.work | `home-manager/nixos.nix` |
-| `tailscale` | tailscale daemon + firewall | `tailscale.nix` |
-
-| HM class | Means | Files |
-|---|---|---|
-| `base` | CLI tools, shell, identity | `cli/`, `home-manager/{identity,core}.nix` |
-| `desktop` | wayland stack, theming, GUI apps | `desktop/` |
-| `laptop` | user-level laptop tools (asusctl, amdgpu_top, keyd mapper) | `hardware/` |
-| `work` | teleport, vault | `work/` |
+| `laptop` | common, graphical, dev, games, laptop, tailscale, virtualization | `xen` |
+| `wsl` | common, dev, virtualization, work, wsl | `Sam-Desktop` |
 
 ## Composition (hosts)
 
-A host is a *directory* of small files under `modules/hosts/<name>/`, each
-contributing to `configurations.nixos.<name>.module`. `modules/configurations/nixos.nix`
-walks `config.configurations.nixos` and builds `flake.nixosConfigurations`
-automatically — **no `flake.nix` edit is needed when adding a host.**
+A host is one `configuration.nix` plus its `hardware-configuration.nix`:
 
 ```nix
-# modules/hosts/xen/imports.nix — chooses which personas this host has
+# hosts/xen/configuration.nix
 { config, ... }:
+let
+  owner = config.flake.meta.owner.username;
+in
 {
   configurations.nixos.xen.module = {
-    imports = [ ./hardware-configuration.nix ] ++ (with config.flake.modules.nixos; [
-      base desktop dev games laptop tailscale
-    ]);
-  };
-}
-```
+    imports = [
+      ./hardware-configuration.nix
+      config.flake.roles.nixos.laptop
+    ];
 
-```nix
-# modules/hosts/xen/hostname.nix — one concern per file
-{
-  configurations.nixos.xen.module = {
     networking.hostName = "xen";
-  };
-}
-```
-
-```nix
-# modules/hosts/xen/state-version.nix
-{
-  configurations.nixos.xen.module = {
+    nixpkgs.hostPlatform = "x86_64-linux";
     system.stateVersion = "25.11";
+
+    boot.loader.systemd-boot.enable = true;
+    boot.loader.efi.canTouchEfiVariables = true;
+
+    # …per-host overrides (monitor layout, etc.)
   };
 }
 ```
 
-All files in `modules/hosts/xen/` merge; there is no single default.nix. This
-keeps hardware-configuration, boot loader, monitors, platform, etc. cleanly
-separated and movable between hosts.
+`flake-modules/nixos-configs.nix` walks `config.configurations.nixos` and builds `flake.nixosConfigurations` automatically — **no `flake.nix` edit is needed when adding a host.**
 
 ## Build flow
 
@@ -165,22 +163,22 @@ separated and movable between hosts.
 flowchart TB
     U([just deploy]):::entry
     U --> R[nh os switch . -H HOST]
-    R --> F[[flake.nix<br/>import-tree ./modules]]:::flake
+    R --> F[[flake.nix<br/>import-tree modules/ + roles/ + hosts/ + flake-modules/]]:::flake
 
-    F --> CFG[configurations/nixos.nix<br/>─────<br/>options.configurations.nixos<br/>derive flake.nixosConfigurations]:::flake
+    F --> CFG[flake-modules/nixos-configs.nix<br/>configurations.nixos → flake.nixosConfigurations]:::flake
+    F --> META[flake-modules/meta.nix<br/>flake.meta.owner]:::flake
+    F --> HMW[flake-modules/home-manager.nix<br/>nixos.&lt;class&gt; → homeManager.&lt;class&gt;]:::flake
+    F --> ROPT[flake-modules/roles.nix<br/>options.flake.roles]:::flake
 
-    F --> META[meta/owner.nix<br/>flake.meta.owner]:::always
-    F --> HMW[home-manager/nixos.nix<br/>nixos.&lt;class&gt; → homeManager.&lt;class&gt;]:::always
+    CFG --> HOST[hosts/HOST/configuration.nix<br/>imports a role + host overrides]:::host
 
-    CFG --> HOST[hosts/HOST/ — merged<br/>─────<br/>imports · hostname · platform<br/>boot · state-version · host overrides]:::host
+    HOST --> ROLE[flake.roles.nixos.&lt;role&gt;<br/>━━━<br/>roles/&lt;role&gt;.nix]:::role
 
-    HOST --> IMP[imports list<br/>NixOS classes only]:::group
+    ROLE --> commonC[common<br/>━━━<br/>modules/common/*.nix]:::always
+    ROLE --> featC[feature modules<br/>━━━<br/>graphical · laptop · dev · games<br/>virtualization · wsl · tailscale · work]:::feature
 
-    IMP --> baseC[base<br/>━━━<br/>base/*.nix]:::always
-    IMP --> featC[feature classes<br/>━━━<br/>desktop · laptop · wsl · dev<br/>games · work · tailscale]:::feature
-
-    baseC -. wires .-> hmB[homeManager.base<br/>cli/*.nix<br/>home-manager/{identity,core}.nix]:::always
-    featC -. wires .-> hmF[homeManager.&lt;class&gt;<br/>desktop/*.nix · hardware/*.nix<br/>work/*.nix]:::feature
+    commonC -. wires .-> hmC[homeManager.common<br/>modules/common/*.nix]:::always
+    featC -. wires .-> hmF[homeManager.&lt;class&gt;<br/>modules/graphical/*.nix · modules/laptop/*.nix<br/>modules/work/*.nix]:::feature
 
     featC -. imports .-> ih[inputs.hyprland]:::input
     featC -. imports .-> ia[inputs.asus-fan]:::input
@@ -189,25 +187,21 @@ flowchart TB
     classDef entry fill:#cfe,stroke:#393
     classDef flake fill:#fdc,stroke:#a60
     classDef host fill:#ffc,stroke:#aa0
-    classDef group fill:#def,stroke:#36a
+    classDef role fill:#def,stroke:#36a
     classDef always fill:#efe,stroke:#393
     classDef feature fill:#fef,stroke:#a3a
     classDef input fill:#eee,stroke:#888,stroke-dasharray:4 2
 ```
 
 **Reading it:**
-- Every `.nix` under `modules/` is loaded by `import-tree`; they all contribute to the flake.
-- Yellow host directory is the composition point — imports list + per-host overrides.
-- Host files only list **NixOS classes**. HM content is carried automatically
-  by the matching nixos class via `home-manager/nixos.nix`.
-- Feature classes pull their flake inputs only when actually imported — WSL
-  doesn't evaluate the hyprland input, xen doesn't evaluate nixos-wsl.
+- `import-tree` loads every `.nix` under `modules/`, `roles/`, `hosts/`, and `flake-modules/`.
+- The host's `configuration.nix` imports one role; the role imports modules; module files merge by name.
+- HM content is carried automatically by the matching nixos module via the bridge.
+- Feature modules pull their flake inputs only when actually imported — WSL doesn't evaluate hyprland, xen doesn't evaluate nixos-wsl.
 
 ## Bootstrap (new machine)
 
-Minimal path from a fresh NixOS install to this flake owning the system.
-`nh ... -H <hostname>` selects which `nixosConfigurations.<name>` to build;
-the selected entry's `networking.hostName` sets the running hostname on activation.
+Minimal path from a fresh NixOS install to this flake owning the system. `nh ... -H <hostname>` selects which `nixosConfigurations.<name>` to build; the selected entry's `networking.hostName` sets the running hostname on activation.
 
 1. Install NixOS (minimal or graphical ISO) and log in.
 2. Get networking: `nmtui` for wireless, nothing to do for wired.
@@ -222,14 +216,12 @@ the selected entry's `networking.hostName` sets the running hostname on activati
    nix-shell -p git
    git clone <repo-url> ~/dotfiles && cd ~/dotfiles
    ```
-5. Dump hardware config directly from running hardware (never copy the installer's file or a stale checked-in one — UUIDs and kernel modules drift):
+5. Dump hardware config directly from the running hardware (never copy the installer's file or a stale checked-in one — UUIDs and kernel modules drift):
    ```bash
-   mkdir -p modules/hosts/<hostname>
-   sudo nixos-generate-config --show-hardware-config > modules/hosts/<hostname>/hardware-configuration.nix
+   mkdir -p hosts/<hostname>
+   sudo nixos-generate-config --show-hardware-config > hosts/<hostname>/hardware-configuration.nix
    ```
-6. Write the host files (see [Adding a host](#adding-a-host) for templates).
-   No `flake.nix` edit is required — `configurations.nixos.<name>` is
-   auto-exposed as `flake.nixosConfigurations.<name>`.
+6. Write `hosts/<hostname>/configuration.nix` (see [Adding a host](#adding-a-host)). No `flake.nix` edit is required — `configurations.nixos.<name>` is auto-exposed as `flake.nixosConfigurations.<name>`.
 7. If reinstalling over an old install, wipe leftover partitions so systemd GPT auto-discovery doesn't try to mount them and trigger a UUID wait-job:
    ```bash
    lsblk -f                         # find orphans not in fileSystems
@@ -243,21 +235,17 @@ the selected entry's `networking.hostName` sets the running hostname on activati
    ```bash
    nix eval --json .#nixosConfigurations.<hostname>.config.fileSystems
    ```
-10. Build as `boot` (not `switch`) and reboot — if the new generation breaks,
-    the previous one is still the default entry and you can roll back from the
-    systemd-boot menu. `nh` isn't on `PATH` yet, so invoke it one-off via `nix run`:
+10. Build as `boot` (not `switch`) and reboot — if the new generation breaks, the previous one is still the default entry and you can roll back from the systemd-boot menu. `nh` isn't on `PATH` yet, so invoke it one-off via `nix run`:
     ```bash
     nix run nixpkgs#nh -- os boot . -H <hostname>
     sudo reboot
     ```
-11. After the machine comes up clean on the flake, `nh` is installed via
-    home-manager. From then on:
+11. After the machine comes up clean on the flake, `nh` is installed via home-manager. From then on:
     ```bash
     nh os switch . -H <hostname>   # or: just deploy
     ```
 
-`/etc/nixos/configuration.nix` is no longer consulted after step 10 activates —
-the flake owns everything.
+`/etc/nixos/configuration.nix` is no longer consulted after step 10 activates — the flake owns everything.
 
 ## Adding a host
 
@@ -266,87 +254,39 @@ For when the repo is already set up and you want to provision another machine.
 1. On the target machine, clone the repo and dump its hardware config:
    ```bash
    git clone <repo-url> ~/dotfiles && cd ~/dotfiles
-   mkdir -p modules/hosts/<hostname>
-   sudo nixos-generate-config --show-hardware-config > modules/hosts/<hostname>/hardware-configuration.nix
+   mkdir -p hosts/<hostname>
+   sudo nixos-generate-config --show-hardware-config > hosts/<hostname>/hardware-configuration.nix
    ```
 
-2. Write the host files. Split by concern — every file targets
-   `configurations.nixos.<hostname>.module`, and they all merge. Typical
-   laptop running hyprland:
+2. Pick a role from `roles/` (or write a new one — see [Adding a role](#adding-a-role)). Write `hosts/<hostname>/configuration.nix`:
 
    ```nix
-   # modules/hosts/<hostname>/imports.nix
    { config, ... }:
    {
      configurations.nixos.<hostname>.module = {
-       imports = [ ./hardware-configuration.nix ] ++ (with config.flake.modules.nixos; [
-         base desktop laptop dev games tailscale
-       ]);
+       imports = [
+         ./hardware-configuration.nix
+         config.flake.roles.nixos.<role>     # e.g. laptop, wsl
+       ];
+
+       networking.hostName = "<hostname>";
+       nixpkgs.hostPlatform = "x86_64-linux";
+       system.stateVersion = "25.11";
+
+       boot.loader.systemd-boot.enable = true;
+       boot.loader.efi.canTouchEfiVariables = true;
      };
    }
    ```
 
+   For a WSL host, drop `hardware-configuration.nix` and the boot loader (nixos-wsl handles both):
    ```nix
-   # modules/hosts/<hostname>/hostname.nix
-   {
-     configurations.nixos.<hostname>.module.networking.hostName = "<hostname>";
-   }
+   imports = [ config.flake.roles.nixos.wsl ];
    ```
 
-   ```nix
-   # modules/hosts/<hostname>/platform.nix
-   {
-     configurations.nixos.<hostname>.module.nixpkgs.hostPlatform = "x86_64-linux";
-   }
-   ```
+   Per-host overrides (monitor layout, host-specific packages, host-only home-manager tweaks) go in the same `configuration.nix`. If you need `pkgs`, switch to the function form — see `hosts/Sam-Desktop/configuration.nix` for an example with a Chrome-via-WSL-interop wrapper.
 
-   ```nix
-   # modules/hosts/<hostname>/boot.nix
-   {
-     configurations.nixos.<hostname>.module.boot.loader = {
-       systemd-boot.enable = true;
-       efi.canTouchEfiVariables = true;
-     };
-   }
-   ```
-
-   ```nix
-   # modules/hosts/<hostname>/state-version.nix
-   {
-     configurations.nixos.<hostname>.module.system.stateVersion = "25.11";
-   }
-   ```
-
-   Per-host overrides (e.g. monitor layout) live in their own file too:
-
-   ```nix
-   # modules/hosts/<hostname>/monitor.nix
-   { config, ... }:
-   let
-     inherit (config.flake.meta.owner) username;
-   in
-   {
-     configurations.nixos.<hostname>.module.home-manager.users.${username}.wayland.windowManager.hyprland.settings.monitor = [
-       ",preferred,auto,1.5"
-     ];
-   }
-   ```
-
-   For a WSL host, drop `hardware-configuration.nix` + boot loader (nixos-wsl
-   handles both) and use a shorter imports list:
-
-   ```nix
-   # modules/hosts/<hostname>/imports.nix
-   { config, ... }:
-   {
-     configurations.nixos.<hostname>.module = {
-       imports = with config.flake.modules.nixos; [ base dev wsl work ];
-     };
-   }
-   ```
-
-3. No `flake.nix` edit is needed. `configurations.nixos.<hostname>` is
-   automatically exposed as `flake.nixosConfigurations.<hostname>`.
+3. No `flake.nix` edit is needed. `configurations.nixos.<hostname>` is automatically exposed as `flake.nixosConfigurations.<hostname>`.
 
 4. Stage, preview, build as `boot`, reboot:
    ```bash
@@ -360,14 +300,12 @@ For when the repo is already set up and you want to provision another machine.
 
 ## Adding a feature module
 
-1. Decide which class the feature belongs to. Is it universal (`base`)?
-   Graphical (`desktop`)? Dev tooling (`dev`)? See the [classes table](#classes).
-2. Create or edit a file in the matching folder. Just contribute to the
-   class — no new named module needed:
+1. Decide which module the feature belongs to — see the [modules table](#modules).
+2. Drop a file in `modules/<module>/`. Just contribute to the module — no new named module needed:
    ```nix
-   # modules/desktop/myapp.nix
+   # modules/graphical/myapp.nix
    {
-     flake.modules.homeManager.desktop = { pkgs, ... }: {
+     flake.modules.homeManager.graphical = { pkgs, ... }: {
        home.packages = [ pkgs.myapp ];
      };
    }
@@ -375,20 +313,35 @@ For when the repo is already set up and you want to provision another machine.
    If the feature has both a NixOS and HM side, contribute to both in one file:
    ```nix
    {
-     flake.modules.nixos.desktop = {
-       services.myapp.enable = true;
-     };
-     flake.modules.homeManager.desktop = { pkgs, ... }: {
+     flake.modules.nixos.graphical.services.myapp.enable = true;
+     flake.modules.homeManager.graphical = { pkgs, ... }: {
        home.packages = [ pkgs.myapp-cli ];
      };
    }
    ```
-3. Done. Every host that imports the matching NixOS class automatically gets
-   the new content on the next rebuild.
+3. Done. Every host whose role imports `graphical` automatically gets the new content on the next rebuild.
 
-If the feature is a **new persona** (a new axis hosts opt into), define a new
-class: pick a name, add a folder, and have `modules/home-manager/nixos.nix`
-wire the HM twin if needed.
+If the feature is a **new module** (a new axis hosts opt into):
+1. Create `modules/<new-module>/`.
+2. Wire its homeManager twin in `flake-modules/home-manager.nix` if the module has a homeManager side.
+3. Add it to the role(s) that should pick it up.
+
+## Adding a role
+
+Roles are just bundles of modules. To create one:
+
+```nix
+# roles/server.nix
+{ config, ... }: {
+  flake.roles.nixos.server = {
+    imports = with config.flake.modules.nixos; [
+      common dev tailscale virtualization
+    ];
+  };
+}
+```
+
+Hosts then import `config.flake.roles.nixos.server`. A role file should contain only `imports` — no actual config. Anything host-specific belongs in the host's `configuration.nix`, not the role.
 
 ## Emergency mode / wait-job on a UUID
 
