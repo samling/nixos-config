@@ -6,21 +6,21 @@ Four top-level directories, each with one job:
 
 | Dir | Contents | Writes |
 |---|---|---|
-| `flake-modules/` | framework glue — option declarations, the homeManager↔NixOS bridge | `options.flake.*`, framework-level config |
-| `modules/<module>/` | leaf config — files contributing to one module | `flake.modules.{nixos,homeManager}.<module>` |
-| `roles/<role>.nix` | role bundles — each picks a list of modules | `flake.roles.nixos.<role>` |
+| `flake-modules/` | framework glue - option declarations, the homeManager↔NixOS bridge | `options.flake.*`, framework-level config |
+| `modules/<module>/` | leaf config - files contributing to one module | `flake.modules.{nixos,homeManager}.<module>` |
+| `roles/<role>.nix` | role bundles - each picks a list of modules | `flake.roles.nixos.<role>` |
 | `hosts/<host>/` | one host's `configuration.nix` + `hardware-configuration.nix` | `configurations.nixos.<host>.module` |
 
 Folder discipline:
 - Every `.nix` in `modules/<x>/` only writes `flake.modules.{nixos,homeManager}.<x>`. Folder name == module name.
-- Every `.nix` in `roles/` is one role, only writes `flake.roles.nixos.<role>`, body is only `imports = [...]` — no real config in role files.
+- Every `.nix` in `roles/` is one role, only writes `flake.roles.nixos.<role>`, body is only `imports = [...]` - no real config in role files.
 - Every `.nix` in `hosts/<h>/` only writes `configurations.nixos.<h>.module`. Imports one role plus host-specific overrides.
 - Every `.nix` in `flake-modules/` only declares options or wires framework glue. No domain config.
 
 ## Repo structure
 
 ```
-flake.nix                                # entry — inputs + import-tree
+flake.nix                                # entry - inputs + import-tree
 
 flake-modules/                           # framework glue
   meta.nix                               # options.flake.meta + owner constants
@@ -28,7 +28,7 @@ flake-modules/                           # framework glue
   roles.nix                              # options.flake.roles
   home-manager.nix                       # nixos.<class> ↔ homeManager.<class> bridge
 
-modules/                                 # leaf modules — folder name == module name
+modules/                                 # leaf modules - folder name == module name
   common/                                # → nixos.common + homeManager.common (every host)
   graphical/                             # → nixos.graphical + homeManager.graphical (Wayland DE)
   laptop/                                # → nixos.laptop + homeManager.laptop (laptop hardware)
@@ -54,17 +54,17 @@ config/                                  # static dotfiles symlinked by home-man
 pkgs/                                    # custom callPackage recipes
 ```
 
-`import-tree` auto-loads every `.nix` under `modules/`, `flake-modules/`, `roles/`, and `hosts/`. Add a file, its contributions are active on the next rebuild. The only filter is on `hardware-configuration.nix` — that's a NixOS module imported explicitly by the host's `configuration.nix`, not a flake-module.
+`import-tree` auto-loads every `.nix` under `modules/`, `flake-modules/`, `roles/`, and `hosts/`. Add a file, its contributions are active on the next rebuild. The only filter is on `hardware-configuration.nix` - that's a NixOS module imported explicitly by the host's `configuration.nix`, not a flake-module.
 
 ## How it works
 
 ### Modules merge by name
 
-Most files don't declare a new module — they contribute to an existing module by name. `modules/graphical/audio.nix` writes `flake.modules.nixos.graphical = { services.pipewire.enable = true; }`; `modules/graphical/bluetooth.nix` writes `flake.modules.nixos.graphical = { hardware.bluetooth.enable = true; }`; flake-parts merges them. Adding a feature = drop a file in the right folder, not edit an imports list.
+Most files don't declare a new module - they contribute to an existing module by name. `modules/graphical/audio.nix` writes `flake.modules.nixos.graphical = { services.pipewire.enable = true; }`; `modules/graphical/bluetooth.nix` writes `flake.modules.nixos.graphical = { hardware.bluetooth.enable = true; }`; flake-parts merges them. Adding a feature = drop a file in the right folder, not edit an imports list.
 
 ### Roles bundle modules
 
-A role file is just `imports = [...]` — a list of modules a host wants together:
+A role file is just `imports = [...]` - a list of modules a host wants together:
 
 ```nix
 # roles/laptop.nix
@@ -77,9 +77,9 @@ A role file is just `imports = [...]` — a list of modules a host wants togethe
 }
 ```
 
-Hosts therefore stay tiny — one role import plus a few host-specific overrides.
+Hosts therefore stay tiny - one role import plus a few host-specific overrides.
 
-`flake.roles.nixos.laptop` (the bundle) and `flake.modules.nixos.laptop` (the form-factor module) live in different attribute paths — no collision, even though they share a name.
+`flake.roles.nixos.laptop` (the bundle) and `flake.modules.nixos.laptop` (the form-factor module) live in different attribute paths - no collision, even though they share a name.
 
 ### HM is wired into NixOS centrally
 
@@ -103,13 +103,13 @@ Hosts therefore list only NixOS classes (via the role they import). Pulling in `
 
 ### Owner is one value
 
-`flake-modules/meta.nix` is the single source of truth for username, home directory, description, and home-manager state version. Every module that needs the current user references `config.flake.meta.owner.*` instead of hardcoding `"sboynton"`. The home-manager `stateVersion` is stored as `homeManagerStateVersion` to make its scope explicit — system stateVersion is set per-host in `hosts/<h>/configuration.nix`.
+`flake-modules/meta.nix` is the single source of truth for username, home directory, description, and home-manager state version. Every module that needs the current user references `config.flake.meta.owner.*` instead of hardcoding `"sboynton"`. The home-manager `stateVersion` is stored as `homeManagerStateVersion` to make its scope explicit - system stateVersion is set per-host in `hosts/<h>/configuration.nix`.
 
 ## Modules
 
 | Module | Means | Class(es) | Files |
 |---|---|---|---|
-| `common` | universal foundation — nix, user, locale, openssh, shell, dotfiles, CLI tools | nixos + homeManager | `modules/common/` |
+| `common` | universal foundation - nix, user, locale, openssh, shell, dotfiles, CLI tools | nixos + homeManager | `modules/common/` |
 | `graphical` | Wayland DE (hyprland), theming, GUI apps | nixos + homeManager | `modules/graphical/` |
 | `laptop` | laptop hardware (asus fan/edid, keyd) | nixos + homeManager | `modules/laptop/` |
 | `dev` | dev tooling (docker, nix-ld, dconf) | nixos | `modules/dev/` |
@@ -155,7 +155,7 @@ in
 }
 ```
 
-`flake-modules/nixos-configs.nix` walks `config.configurations.nixos` and builds `flake.nixosConfigurations` automatically — **no `flake.nix` edit is needed when adding a host.**
+`flake-modules/nixos-configs.nix` walks `config.configurations.nixos` and builds `flake.nixosConfigurations` automatically - **no `flake.nix` edit is needed when adding a host.**
 
 ## Build flow
 
@@ -197,7 +197,7 @@ flowchart TB
 - `import-tree` loads every `.nix` under `modules/`, `roles/`, `hosts/`, and `flake-modules/`.
 - The host's `configuration.nix` imports one role; the role imports modules; module files merge by name.
 - HM content is carried automatically by the matching nixos module via the bridge.
-- Feature modules pull their flake inputs only when actually imported — WSL doesn't evaluate hyprland, xen doesn't evaluate nixos-wsl.
+- Feature modules pull their flake inputs only when actually imported - WSL doesn't evaluate hyprland, xen doesn't evaluate nixos-wsl.
 
 ## Bootstrap (new machine)
 
@@ -205,7 +205,7 @@ Minimal path from a fresh NixOS install to this flake owning the system. `nh ...
 
 1. Install NixOS (minimal or graphical ISO) and log in.
 2. Get networking: `nmtui` for wireless, nothing to do for wired.
-3. Enable flakes — the only edit you'll make to `/etc/nixos/`:
+3. Enable flakes - the only edit you'll make to `/etc/nixos/`:
    ```nix
    # /etc/nixos/configuration.nix
    nix.settings.experimental-features = [ "nix-command" "flakes" ];
@@ -216,18 +216,18 @@ Minimal path from a fresh NixOS install to this flake owning the system. `nh ...
    nix-shell -p git
    git clone <repo-url> ~/dotfiles && cd ~/dotfiles
    ```
-5. Dump hardware config directly from the running hardware (never copy the installer's file or a stale checked-in one — UUIDs and kernel modules drift):
+5. Dump hardware config directly from the running hardware (never copy the installer's file or a stale checked-in one - UUIDs and kernel modules drift):
    ```bash
    mkdir -p hosts/<hostname>
    sudo nixos-generate-config --show-hardware-config > hosts/<hostname>/hardware-configuration.nix
    ```
-6. Write `hosts/<hostname>/configuration.nix` (see [Adding a host](#adding-a-host)). No `flake.nix` edit is required — `configurations.nixos.<name>` is auto-exposed as `flake.nixosConfigurations.<name>`.
+6. Write `hosts/<hostname>/configuration.nix` (see [Adding a host](#adding-a-host)). No `flake.nix` edit is required - `configurations.nixos.<name>` is auto-exposed as `flake.nixosConfigurations.<name>`.
 7. If reinstalling over an old install, wipe leftover partitions so systemd GPT auto-discovery doesn't try to mount them and trigger a UUID wait-job:
    ```bash
    lsblk -f                         # find orphans not in fileSystems
    sudo wipefs -a /dev/<partition>  # for each orphan (old swap, old /home, etc.)
    ```
-8. Stage all files — flakes only see git-tracked files, unstaged edits are invisible:
+8. Stage all files - flakes only see git-tracked files, unstaged edits are invisible:
    ```bash
    git add -A
    ```
@@ -235,7 +235,7 @@ Minimal path from a fresh NixOS install to this flake owning the system. `nh ...
    ```bash
    nix eval --json .#nixosConfigurations.<hostname>.config.fileSystems
    ```
-10. Build as `boot` (not `switch`) and reboot — if the new generation breaks, the previous one is still the default entry and you can roll back from the systemd-boot menu. `nh` isn't on `PATH` yet, so invoke it one-off via `nix run`:
+10. Build as `boot` (not `switch`) and reboot - if the new generation breaks, the previous one is still the default entry and you can roll back from the systemd-boot menu. `nh` isn't on `PATH` yet, so invoke it one-off via `nix run`:
     ```bash
     nix run nixpkgs#nh -- os boot . -H <hostname>
     sudo reboot
@@ -245,7 +245,7 @@ Minimal path from a fresh NixOS install to this flake owning the system. `nh ...
     nh os switch . -H <hostname>   # or: just deploy
     ```
 
-`/etc/nixos/configuration.nix` is no longer consulted after step 10 activates — the flake owns everything.
+`/etc/nixos/configuration.nix` is no longer consulted after step 10 activates - the flake owns everything.
 
 ## Adding a host
 
@@ -258,7 +258,7 @@ For when the repo is already set up and you want to provision another machine.
    sudo nixos-generate-config --show-hardware-config > hosts/<hostname>/hardware-configuration.nix
    ```
 
-2. Pick a role from `roles/` (or write a new one — see [Adding a role](#adding-a-role)). Write `hosts/<hostname>/configuration.nix`:
+2. Pick a role from `roles/` (or write a new one - see [Adding a role](#adding-a-role)). Write `hosts/<hostname>/configuration.nix`:
 
    ```nix
    { config, ... }:
@@ -284,7 +284,7 @@ For when the repo is already set up and you want to provision another machine.
    imports = [ config.flake.roles.nixos.wsl ];
    ```
 
-   Per-host overrides (monitor layout, host-specific packages, host-only home-manager tweaks) go in the same `configuration.nix`. If you need `pkgs`, switch to the function form — see `hosts/Sam-Desktop/configuration.nix` for an example with a Chrome-via-WSL-interop wrapper.
+   Per-host overrides (monitor layout, host-specific packages, host-only home-manager tweaks) go in the same `configuration.nix`. If you need `pkgs`, switch to the function form - see `hosts/Sam-Desktop/configuration.nix` for an example with a Chrome-via-WSL-interop wrapper.
 
 3. No `flake.nix` edit is needed. `configurations.nixos.<hostname>` is automatically exposed as `flake.nixosConfigurations.<hostname>`.
 
@@ -300,8 +300,8 @@ For when the repo is already set up and you want to provision another machine.
 
 ## Adding a feature module
 
-1. Decide which module the feature belongs to — see the [modules table](#modules).
-2. Drop a file in `modules/<module>/`. Just contribute to the module — no new named module needed:
+1. Decide which module the feature belongs to - see the [modules table](#modules).
+2. Drop a file in `modules/<module>/`. Just contribute to the module - no new named module needed:
    ```nix
    # modules/graphical/myapp.nix
    {
@@ -341,13 +341,13 @@ Roles are just bundles of modules. To create one:
 }
 ```
 
-Hosts then import `config.flake.roles.nixos.server`. A role file should contain only `imports` — no actual config. Anything host-specific belongs in the host's `configuration.nix`, not the role.
+Hosts then import `config.flake.roles.nixos.server`. A role file should contain only `imports` - no actual config. Anything host-specific belongs in the host's `configuration.nix`, not the role.
 
 ## Emergency mode / wait-job on a UUID
 
 If boot hangs on `Timed out waiting for device /dev/disk/by-uuid/<UUID>`:
 
-1. Compare the UUID against `blkid` — if it doesn't exist, find where it's referenced:
+1. Compare the UUID against `blkid` - if it doesn't exist, find where it's referenced:
    ```bash
    nix eval --json .#nixosConfigurations.<hostname>.config.boot.kernelParams
    nix eval --json .#nixosConfigurations.<hostname>.config.boot.resumeDevice
@@ -359,7 +359,7 @@ If boot hangs on `Timed out waiting for device /dev/disk/by-uuid/<UUID>`:
    sudo nix-env --profile /nix/var/nix/profiles/system --delete-generations old
    sudo /run/current-system/bin/switch-to-configuration boot
    ```
-3. If nothing in the Nix config references it, it's GPT auto-discovery on an orphan partition — `wipefs` it (see Bootstrap step 7).
+3. If nothing in the Nix config references it, it's GPT auto-discovery on an orphan partition - `wipefs` it (see Bootstrap step 7).
 
 ## Daily usage
 
