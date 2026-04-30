@@ -6,10 +6,16 @@ Personal NixOS + home-manager configuration, with a chezmoi/doppler layer for th
 
 | File(s)/Folder(s) | Description |
 | --- | --- |
-| `flake.nix`, `modules/` | NixOS + home-manager configuration. See: [NIX.md](./NIX.md) |
+| `flake.nix` | inputs + import-tree entry point |
+| `flake-modules/` | framework glue — option declarations, the homeManager↔NixOS bridge |
+| `modules/<persona>/` | leaf NixOS + home-manager config. Folder name == persona name |
+| `roles/<role>.nix` | role bundles — each picks a list of personas a host wants together |
+| `hosts/<host>/` | one `configuration.nix` (+ optional `hardware-configuration.nix`) per machine |
 | `config/` | static dotfile sources imported by home-manager modules |
 | `pkgs/` | custom `callPackage` recipes |
 | `chezmoi/` | dotfiles kept out of the Nix store |
+
+See [NIX.md](./NIX.md) for the architecture in detail.
 
 ### Provisioning NixOS
 
@@ -32,10 +38,10 @@ A full path from a blank NixOS install to a daily-driver machine.
     ```
 5. Dump this machine's hardware config from the running hardware:
     ```bash
-    mkdir -p modules/hosts/<hostname>
-    sudo nixos-generate-config --show-hardware-config > modules/hosts/<hostname>/hardware-configuration.nix
+    mkdir -p hosts/<hostname>
+    sudo nixos-generate-config --show-hardware-config > hosts/<hostname>/hardware-configuration.nix
     ```
-6. Write the host files under `modules/hosts/<hostname>/` (imports, hostname, platform, boot, state-version, any per-host overrides). `flake.nixosConfigurations.<hostname>` is auto-derived from `configurations.nixos.<hostname>` — no `flake.nix` edit needed. See [NIX.md → Adding a host](./NIX.md#adding-a-host).
+6. Write `hosts/<hostname>/configuration.nix` — pick a role from `roles/` (or write a new one), import it alongside the hardware config, and add any host-specific overrides. `flake.nixosConfigurations.<hostname>` is auto-derived from `configurations.nixos.<hostname>` — no `flake.nix` edit needed. See [NIX.md → Adding a host](./NIX.md#adding-a-host).
 7. Stage everything (nix ignores untracked files):
     ```bash
     git add -A
