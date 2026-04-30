@@ -45,7 +45,8 @@
   outputs = inputs@{ flake-parts, import-tree, nixpkgs, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } ({ lib, ... }: {
       imports = [
-        (import-tree.filterNot (lib.hasSuffix "hardware-configuration.nix") ./modules)
+        (import-tree ./modules)
+        (import-tree.filterNot (lib.hasSuffix "hardware-configuration.nix") ./hosts)
         (import-tree.filterNot (lib.hasSuffix "/package.nix") ./pkgs)
         (import-tree ./flake-modules)
         (import-tree ./roles)
