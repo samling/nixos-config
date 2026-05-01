@@ -84,6 +84,9 @@ command -v talhelper >/dev/null && _cached_completion talhelper talhelper comple
 #=== uv
 command -v uv >/dev/null && _cached_completion uv uv generate-shell-completion zsh
 
+#=== vault
+command -v vault >/dev/null && complete -o nospace -C vault vault
+
 #=== zellij
 # Post-process the output (strip compdef mismatch) before caching.
 if command -v zellij >/dev/null; then

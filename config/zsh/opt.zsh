@@ -72,15 +72,15 @@ zstyle ':fzf-tab:*' use-fzf-default-opts yes
 zstyle ':fzf-tab:*' fzf-flags \
   --preview-window=down,5 \
   --height 100% \
-  --bind 'ctrl-/:change-preview-window(down,40|)' \
   --border \
-  --border-label='[C-/] Expand preview' \
   --border-label-pos=0:bottom
+  #--bind 'ctrl-/:change-preview-window(down,40|)' \
+  #--border-label='[C-/] Expand preview' \
   #--tmux=35%,60% \
 
 
 #zstyle ':fzf-tab:*' fzf-preview 'eza -1 --color=always $realpath'
-zstyle ':fzf-tab:*' fzf-preview '~/.zsh/scripts/preview_all.sh $realpath'
+#zstyle ':fzf-tab:*' fzf-preview '~/.zsh/scripts/preview_all.sh $realpath'
 
 #zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 #
