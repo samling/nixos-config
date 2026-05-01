@@ -15,10 +15,10 @@ in
           rightshift = "overload(rshift, rightshift)";
         };
         settings.rshift = {
-          rightalt = "C-t";
+          rightalt = "C-S-t";
         };
         settings.ralt = { # order-independent extra binding
-          rightshift = "C-t";
+          rightshift = "C-S-t";
         };
         extraConfig = ''
           [control+alt]
