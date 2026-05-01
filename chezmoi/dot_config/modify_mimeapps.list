@@ -3,7 +3,7 @@ set -euo pipefail
 tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
 cat > "$tmp"
 for mime in image/jpeg image/png image/gif image/bmp image/webp image/tiff; do
-  crudini --set "$tmp" "Default Applications" "$mime" feh.desktop
+  crudini --set "$tmp" "Default Applications" "$mime" imv.desktop
 done
 # xdg-mime's shell parser uses `grep "^key="` and won't match `key = value`,
 # so strip the spaces crudini inserts.
