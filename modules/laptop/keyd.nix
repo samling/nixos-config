@@ -10,15 +10,15 @@ in
         ids = [ "*" ];
         settings.main = {
           capslock = "leftcontrol";
-          "f23+leftshift+leftmeta" = "M-A-c";
-          rightalt = "overload(ralt, C-w)";
-          rightshift = "overload(rshift, rightshift)";
+          rightalt = "M-A-c"; # clipse-gui
+          "f23+leftshift+leftmeta" = "overload(rcopilot, C-w)"; # rcopilot (hold), close tab (tap)
+          rightshift = "overload(rshift, rightshift)"; # rshift layer (hold), rightshift (tap; does nothing)
         };
         settings.rshift = {
-          rightalt = "C-S-t";
+          "f23+leftshift+leftmeta" = "C-S-t"; # reopen tab
         };
-        settings.ralt = { # order-independent extra binding
-          rightshift = "C-S-t";
+        settings.rcopilot = { # order-independent extra binding
+          rightshift = "C-S-t"; # reopen tab
         };
         extraConfig = ''
           [control+alt]
