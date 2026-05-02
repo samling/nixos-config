@@ -5,6 +5,7 @@
       doppler
       littlesnitch
       tailscale
+      vkv
     ];
   };
 }

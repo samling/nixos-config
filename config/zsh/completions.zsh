@@ -52,7 +52,7 @@ command -v fzf >/dev/null && _cached_completion fzf fzf --zsh
 command -v kubectl >/dev/null && _cached_completion kubectl kubectl completion zsh
 
 #=== kubecolor
-compdef kubecolor=kubectl
+command -v kubecolor && compdef kubecolor=kubectl
 
 #=== plz
 command -v plz >/dev/null && _cached_completion plz plz --completion_script
@@ -86,6 +86,9 @@ command -v uv >/dev/null && _cached_completion uv uv generate-shell-completion z
 
 #=== vault
 command -v vault >/dev/null && complete -o nospace -C vault vault
+
+#=== vault
+command -v vkv >/dev/null && _cached_completion vkv vkv completion zsh
 
 #=== zellij
 # Post-process the output (strip compdef mismatch) before caching.
