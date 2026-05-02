@@ -8,6 +8,7 @@
       cmake
       cmatrix
       crudini
+      nix-diff
       duf
       eza
       fd
@@ -35,6 +36,7 @@
       ts
       unixodbc
       unzip
+      usbutils
       v4l-utils
       viddy
       watch
