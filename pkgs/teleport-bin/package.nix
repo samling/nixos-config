@@ -2,11 +2,11 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "teleport-bin";
-  version = "18.7.2";
+  version = "18.7.6";
 
   src = fetchurl {
     url = "https://cdn.teleport.dev/teleport-v${finalAttrs.version}-linux-amd64-bin.tar.gz";
-    hash = "sha256-z/ssZmD5Oy4ipZZglSSJ/XV+rLMrpv6+WsjfA4AkV2Q=";
+    hash = "sha256-C1gZk3PN7Qxt7xTS/g+jNJ7l6wmcvYofFOR2G/BSi4k=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook ];
