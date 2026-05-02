@@ -10,14 +10,14 @@ in
         ids = [ "*" ];
         settings.main = {
           capslock = "leftcontrol";
-          rightalt = "M-A-c"; # clipse-gui
-          "f23+leftshift+leftmeta" = "overload(rcopilot, C-w)"; # rcopilot (hold), close tab (tap)
+          "f23+leftshift+leftmeta" = "M-A-c"; # clipse-gui
+          rightalt = "overload(ralt, C-w)"; # ralt (hold), close tab (tap)
           rightshift = "overload(rshift, rightshift)"; # rshift layer (hold), rightshift (tap; does nothing)
         };
         settings.rshift = {
-          "f23+leftshift+leftmeta" = "C-S-t"; # reopen tab
+          rightalt = "C-S-t"; # reopen tab
         };
-        settings.rcopilot = { # order-independent extra binding
+        settings.ralt = { # order-independent extra binding
           rightshift = "C-S-t"; # reopen tab
         };
         extraConfig = ''

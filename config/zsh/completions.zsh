@@ -52,7 +52,7 @@ command -v fzf >/dev/null && _cached_completion fzf fzf --zsh
 command -v kubectl >/dev/null && _cached_completion kubectl kubectl completion zsh
 
 #=== kubecolor
-command -v kubecolor && compdef kubecolor=kubectl
+command -v kubecolor >/dev/null && compdef kubecolor=kubectl
 
 #=== plz
 command -v plz >/dev/null && _cached_completion plz plz --completion_script

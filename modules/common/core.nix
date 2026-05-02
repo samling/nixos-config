@@ -25,6 +25,8 @@
       kmod
       libnotify
       lsof
+      man-pages
+      man-pages-posix
       nvd
       psmisc
       ranger
