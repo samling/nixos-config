@@ -5,6 +5,18 @@ boot:
 
 apply:
     NIXPKGS_ALLOW_UNFREE=1 nh os switch --no-nom --show-activation-logs --log-format bar-with-logs . -H {{host}} -- --impure
+    @just overrides
+
+# Surface any "TEMP-OVERRIDE:" markers left in the tree so we remember to remove
+# them once upstream catches up. Add the marker in a comment next to the
+# override (overlay, pin, patch, etc.); a brief description after the colon is
+# echoed verbatim. The Justfile itself is excluded so this recipe doesn't match
+# its own grep pattern.
+overrides:
+    @hits=$(git grep -n --untracked "TEMP-OVERRIDE:" -- ':!Justfile' 2>/dev/null || true); \
+    if [ -n "$hits" ]; then \
+      printf "\n=== Active TEMP-OVERRIDEs ===\n%s\n" "$hits"; \
+    fi
 
 # Show the most recent home-manager activation logs from this boot.
 # Use when `just apply` fails and nh hides the real error.

@@ -14,6 +14,16 @@
     nixpkgs.config.allowUnfree = true;
     nixpkgs.overlays = [
       (final: prev: inputs.self.packages.${prev.stdenv.hostPlatform.system} or {})
+      (final: prev: {
+        wireshark = prev.wireshark.overrideAttrs (old: {
+          src = prev.fetchFromGitLab {
+            owner = "wireshark";
+            repo = "wireshark";
+            tag = "v${old.version}";
+            hash = "sha256-Zvrwxjp4LK2J3QnxmPxKKrU01YHQvPyp54UWzeGNCjA=";
+          };
+        });
+      })
     ];
   };
 }
